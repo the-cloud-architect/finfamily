@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
 
-const YEARS = 35, START_YEAR = 2025;
+const YEARS = 35, START_YEAR = 2025, STORAGE_KEY = "4cast_scenarios";
 
 const initData = (age = 45) => Array.from({length: YEARS}, (_, i) => ({
   year: START_YEAR + i, age: age + i,
@@ -58,8 +58,40 @@ const ScrollTable = ({ children }) => {
   return <div><div ref={topRef} onScroll={() => sync('top')} style={{ overflowX: "auto", height: "14px" }}><div style={{ width: sw, height: "1px" }} /></div><div ref={bottomRef} onScroll={() => sync('bottom')} style={{ overflowX: "auto" }}>{children}</div></div>;
 };
 
-export default function FinFamily() {
+// Load scenarios from localStorage
+const loadSavedScenarios = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    console.error("Error loading scenarios:", e);
+    return [];
+  }
+};
+
+// Save scenarios to localStorage
+const saveScenariosToStorage = (scenarios) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios));
+  } catch (e) {
+    console.error("Error saving scenarios:", e);
+  }
+};
+
+export default function FourCast() {
   const [age, setAge] = useState(45), [retireAge, setRetireAge] = useState(65), [data, setData] = useState(() => initData(45)), [tab, setTab] = useState("variables"), [scenarios, setScenarios] = useState([]), [scenarioName, setScenarioName] = useState("");
+  
+  // Load scenarios from localStorage on mount
+  useEffect(() => {
+    const saved = loadSavedScenarios();
+    if (saved.length > 0) setScenarios(saved);
+  }, []);
+
+  // Save scenarios to localStorage whenever they change
+  useEffect(() => {
+    saveScenariosToStorage(scenarios);
+  }, [scenarios]);
+
   const enriched = useMemo(() => calcCumulative(data), [data]);
   const update = (idx, field, value) => setData(prev => { const next = [...prev]; for (let i = idx; i < YEARS; i++) next[i] = { ...next[i], [field]: value, age: age + i }; return next; });
   const updateAge = newAge => { setAge(newAge); setData(prev => prev.map((r, i) => ({ ...r, age: newAge + i }))); };
@@ -74,7 +106,7 @@ export default function FinFamily() {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", fontFamily: "'SF Mono', monospace", color: "#e2e8f0", padding: "12px" }}>
       <header style={{ textAlign: "center", marginBottom: "16px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "800", margin: 0, background: "linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>FinFamily</h1>
+        <h1 style={{ fontSize: "32px", fontWeight: "800", margin: 0, background: "linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>4Cast</h1>
         <p style={{ color: "#64748b", fontSize: "11px", margin: "4px 0 0", letterSpacing: "2px" }}>35-YEAR HOUSEHOLD PROJECTION</p>
       </header>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px", justifyContent: "center", alignItems: "center" }}>
@@ -98,7 +130,7 @@ export default function FinFamily() {
 
       {tab === "variables" && (
         <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "12px", border: "1px solid rgba(148,163,184,0.1)" }}>
-          <p style={{ fontSize: "10px", color: "#64748b", marginBottom: "10px" }}>💡 Click values to edit. Changes cascade forward. Blue = calculated growth, Red = calculated depreciation.</p>
+          <p style={{ fontSize: "10px", color: "#64748b", marginBottom: "10px" }}>💡 Click values to edit. Changes cascade forward. Blue = calculated growth, Red = calculated depreciation. Scenarios save automatically to browser.</p>
           <ScrollTable>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "9px" }}>
               <thead><tr><th style={stickyTh}>Category</th>{enriched.map((r, i) => <th key={r.year} style={{ ...th, background: isRet(r.year) ? "rgba(251,146,60,0.15)" : i % 5 === 0 ? "rgba(99,102,241,0.1)" : "transparent" }}>{r.year}<br/><span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "8px" }}>Age {r.age}</span></th>)}</tr></thead>
@@ -206,7 +238,7 @@ export default function FinFamily() {
           </div>
         </div>
       )}
-      <footer style={{ marginTop: "24px", textAlign: "center", color: "#475569", fontSize: "9px" }}>FinFamily • Orange = Retirement Years • Blue = Growth • Red = Depreciation</footer>
+      <footer style={{ marginTop: "24px", textAlign: "center", color: "#475569", fontSize: "9px" }}>4Cast • Orange = Retirement Years • Blue = Growth • Red = Depreciation</footer>
     </div>
   );
 }
