@@ -108,6 +108,38 @@ export const VariablesTablePart2Sections = ({
         </tr>
       </AccordionSection>
 
+      {/* CASH FLOW SECTION */}
+      <AccordionSection title="CASH FLOW" icon="💵" color={COLORS.sections.cashflow} isOpen={sections.cashflow} onToggle={() => toggleSection('cashflow')}>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold" }}>Net Cash Flow</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: r.cashFlow >= 0 ? COLORS.income : COLORS.expense, background: bg(r.year, i) }}>
+              {fmt(r.cashFlow)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
+
+      {/* SUMMARY SECTION */}
+      <AccordionSection title="SUMMARY" icon="💎" color={COLORS.sections.summary} isOpen={sections.summary} onToggle={() => toggleSection('summary')}>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.summary }}>Net Worth</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.summary, background: "rgba(167,139,250,0.1)" }}>
+              {fmt(r.netWorth)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#06b6d4" }}>Cash Reserve</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#06b6d4", background: bg(r.year, i) }}>
+              {fmt(r.cashRes)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
+
       {/* LIABILITIES SECTION */}
       <AccordionSection title="LIABILITIES" icon="📉" color={COLORS.sections.liabilities} isOpen={sections.liabilities} onToggle={() => toggleSection('liabilities')}>
         <tr>
@@ -393,18 +425,6 @@ export const VariablesTablePart2Sections = ({
         </tr>
       </AccordionSection>
 
-      {/* CASH FLOW SECTION */}
-      <AccordionSection title="CASH FLOW" icon="💵" color={COLORS.sections.cashflow} isOpen={sections.cashflow} onToggle={() => toggleSection('cashflow')}>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold" }}>Net Cash Flow</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: r.cashFlow >= 0 ? COLORS.income : COLORS.expense, background: bg(r.year, i) }}>
-              {fmt(r.cashFlow)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
       {/* ASSETS SECTION */}
       <AccordionSection title="ASSETS" icon="🏦" color={COLORS.sections.assets} isOpen={sections.assets} onToggle={() => toggleSection('assets')}>
         <tr>
@@ -560,26 +580,6 @@ export const VariablesTablePart2Sections = ({
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
               <Cell value={data[i].carPurchase} onChange={v => updateSingleYear(i, "carPurchase", v)} isYear0={i === 0} isExpense={true} />
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* SUMMARY SECTION */}
-      <AccordionSection title="SUMMARY" icon="💎" color={COLORS.sections.summary} isOpen={sections.summary} onToggle={() => toggleSection('summary')}>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.summary }}>Net Worth</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.summary, background: "rgba(167,139,250,0.1)" }}>
-              {fmt(r.netWorth)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#06b6d4" }}>Cash Reserve</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#06b6d4", background: bg(r.year, i) }}>
-              {fmt(r.cashRes)}
             </td>
           ))}
         </tr>

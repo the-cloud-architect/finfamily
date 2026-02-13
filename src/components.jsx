@@ -40,6 +40,7 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
       onBlur={done} 
       onKeyDown={e => e.key === "Enter" && done()} 
       autoFocus 
+      onFocus={e => e.target.select()}
       style={{ 
         width: "60px",
         padding: "2px 4px",

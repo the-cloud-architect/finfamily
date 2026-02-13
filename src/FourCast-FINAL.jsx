@@ -968,36 +968,6 @@ export default function FourCast() {
 
       {tab === "variables" && (
         <>
-          {/* Expand/Collapse All */}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
-            <button
-              onClick={() => {
-                const allOpen = Object.values(sections).every(v => v);
-                const newVal = !allOpen;
-                setSections(Object.fromEntries(Object.keys(sections).map(k => [k, newVal])));
-              }}
-              style={{
-                padding: "5px 14px",
-                background: "rgba(99, 102, 241, 0.12)",
-                border: "1px solid rgba(99, 102, 241, 0.35)",
-                borderRadius: "6px",
-                color: "#a78bfa",
-                fontSize: "11px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "all 0.2s ease",
-                display: "flex",
-                alignItems: "center",
-                gap: "5px",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
-            >
-              {Object.values(sections).every(v => v) ? '▼ Collapse All' : '▶ Expand All'}
-            </button>
-          </div>
-
           {/* Key Ratios & Net Worth */}
           <div style={{ marginBottom: "14px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "10px" }}>
@@ -1053,6 +1023,35 @@ export default function FourCast() {
           </div>
 
           <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "12px", border: "1px solid rgba(148,163,184,0.1)" }}>
+            {/* Expand/Collapse All */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+              <button
+                onClick={() => {
+                  const allOpen = Object.values(sections).every(v => v);
+                  const newVal = !allOpen;
+                  setSections(Object.fromEntries(Object.keys(sections).map(k => [k, newVal])));
+                }}
+                style={{
+                  padding: "5px 14px",
+                  background: "rgba(99, 102, 241, 0.12)",
+                  border: "1px solid rgba(99, 102, 241, 0.35)",
+                  borderRadius: "6px",
+                  color: "#a78bfa",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.25)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
+              >
+                {Object.values(sections).every(v => v) ? '▼ Collapse All' : '▶ Expand All'}
+              </button>
+            </div>
             <ScrollTable>
               <div>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
