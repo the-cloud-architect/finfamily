@@ -220,7 +220,12 @@ export default function FourCast() {
   const updateSingleYear = (yearIndex, key, value) => update(yearIndex, key, value);
 
   const updateHelocUsed = (yearIndex, value) => {
-    update(yearIndex, "helocUsed", Math.min(value, data[yearIndex].helocLimit));
+    const clamped = Math.min(value, data[yearIndex].helocLimit);
+    const newData = [...data];
+    for (let i = yearIndex; i < newData.length; i++) {
+      newData[i] = { ...newData[i], helocUsed: Math.min(clamped, newData[i].helocLimit) };
+    }
+    setData(newData);
   };
 
   const updateMortgage = (yearIndex, principal, rate, years) => {
@@ -699,7 +704,7 @@ export default function FourCast() {
         {[
           ["You:", age, (v) => updateAges(v, spouseAge)],
           ["Spouse:", spouseAge, (v) => updateAges(age, v)],
-          ["Retire:", retireAge, setRetireAge],
+          ["Retire:", retireAge, (v) => { setRetireAge(v); setData(initData(age, spouseAge, depAges, v)); }],
           ["#Kids:", depAges.length, updateDeps],
         ].map(([l, v, fn], i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(30,41,59,0.8)", padding: "6px 10px", borderRadius: "6px" }}>
@@ -708,7 +713,7 @@ export default function FourCast() {
               type="number"
               value={v}
               onChange={(e) => fn(parseInt(e.target.value) || 0)}
-              style={{ width: "40px", padding: "3px", background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", color: "#fff", fontSize: "12px", textAlign: "center" }}
+              style={{ width: "40px", padding: "3px", background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", color: "#fff", fontSize: "12px", textAlign: "center", fontFamily: "inherit" }}
             />
           </div>
         ))}
@@ -723,6 +728,34 @@ export default function FourCast() {
             />
           </div>
         ))}
+
+        {/* Reset to Defaults Button */}
+        <button
+          onClick={() => {
+            if (confirm("Reset all inputs to default values?")) {
+              resetForecast({ clearScenarioSelection: true });
+            }
+          }}
+          style={{
+            padding: "6px 14px",
+            background: "rgba(251, 191, 36, 0.15)",
+            border: "1px solid rgba(251, 191, 36, 0.4)",
+            borderRadius: "6px",
+            color: "#fbbf24",
+            fontSize: "11px",
+            fontWeight: "700",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251, 191, 36, 0.3)'; e.currentTarget.style.borderColor = '#fbbf24'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251, 191, 36, 0.15)'; e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)'; }}
+        >
+          🔄 Reset
+        </button>
 
         {activeScenario && (
           <button
@@ -900,66 +933,80 @@ export default function FourCast() {
 
           <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "12px", border: "1px solid rgba(148,163,184,0.1)" }}>
             <ScrollTable>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
-                <thead>
-                  <tr>
-                    <th style={stickyTh}>Category</th>
-                    {enriched.map((r, i) => (
-                      <th
-                        key={r.year}
-                        style={{
-                          ...thStyle,
-                          background: isRet(r.year)
-                            ? "rgba(251,146,60,0.15)"
-                            : i % 5 === 0
-                              ? "rgba(99,102,241,0.1)"
-                              : "transparent",
-                        }}
-                      >
-                        {r.year}
-                        <br />
-                        {ageHeader(r)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <VariablesTablePart2Sections {...tableProps} sectionGroup="upper" />
-                </tbody>
-              </table>
-            </ScrollTable>
-          </div>
+              <div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                  <thead>
+                    <tr>
+                      <th style={stickyTh}>Category</th>
+                      {enriched.map((r, i) => (
+                        <th
+                          key={r.year}
+                          style={{
+                            ...thStyle,
+                            background: isRet(r.year)
+                              ? "rgba(251,146,60,0.15)"
+                              : i % 5 === 0
+                                ? "rgba(99,102,241,0.1)"
+                                : "transparent",
+                          }}
+                        >
+                          {r.year}
+                          <br />
+                          {ageHeader(r)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <VariablesTablePart2Sections {...tableProps} sectionGroup="upper" />
+                  </tbody>
+                </table>
 
-          {/* Second scroll section starting at Housing */}
-          <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "12px", border: "1px solid rgba(148,163,184,0.1)" }}>
-            <ScrollTable>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
-                <thead>
-                  <tr>
-                    <th style={stickyTh}>Category</th>
-                    {enriched.map((r, i) => (
-                      <th
-                        key={r.year}
-                        style={{
-                          ...thStyle,
-                          background: isRet(r.year)
-                            ? "rgba(251,146,60,0.15)"
-                            : i % 5 === 0
-                              ? "rgba(99,102,241,0.1)"
-                              : "transparent",
-                        }}
-                      >
-                        {r.year}
-                        <br />
-                        {ageHeader(r)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <VariablesTablePart2Sections {...tableProps} sectionGroup="lower" />
-                </tbody>
-              </table>
+                {/* Mid-table scrollbar indicator */}
+                <div style={{ 
+                  position: "sticky", 
+                  left: 0, 
+                  padding: "6px 0", 
+                  background: "linear-gradient(90deg, rgba(99,102,241,0.15), transparent 50%, rgba(99,102,241,0.15))",
+                  borderTop: "1px solid rgba(99,102,241,0.3)",
+                  borderBottom: "1px solid rgba(99,102,241,0.3)",
+                  textAlign: "center",
+                  color: "#6366f1",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  letterSpacing: "1px"
+                }}>
+                  ◆ HOUSING & BELOW ◆
+                </div>
+
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                  <thead>
+                    <tr>
+                      <th style={stickyTh}>Category</th>
+                      {enriched.map((r, i) => (
+                        <th
+                          key={r.year}
+                          style={{
+                            ...thStyle,
+                            background: isRet(r.year)
+                              ? "rgba(251,146,60,0.15)"
+                              : i % 5 === 0
+                                ? "rgba(99,102,241,0.1)"
+                                : "transparent",
+                          }}
+                        >
+                          {r.year}
+                          <br />
+                          {ageHeader(r)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <VariablesTablePart2Sections {...tableProps} sectionGroup="lower" />
+                  </tbody>
+                </table>
+              </div>
             </ScrollTable>
           </div>
         </>

@@ -145,7 +145,15 @@ export const calcCumulative = (data, retireAge) => {
       }
     }
     
-    const assets = r.cashBalance + stocks + ret401k + home + rental + car + mach;
+    let cashBal;
+    if (i === 0) {
+      cashBal = r.cashBalance;
+    } else {
+      // Cash balance grows/shrinks with prior year's cash flow
+      cashBal = Math.max(0, res[i-1].cashBal + res[i-1].cashFlow);
+    }
+
+    const assets = cashBal + stocks + ret401k + home + rental + car + mach;
     const debt = mortgageBalEnd + rentalMortgageBalEnd + carLoanBalEnd + r.otherDebt + helocUsed;
     
     res.push({ 
@@ -154,7 +162,7 @@ export const calcCumulative = (data, retireAge) => {
       rentalMortgageBal, rentalInterest, rentalPrincipal, rentalMortgageBalEnd, effectiveRentalPayment,
       carLoanBalEnd, carLoanPaymentEffective, homeTaxes, rentalTaxes, helocInterest, housingCost, 
       baseExpenses, vacationBudget, carMaint, assets, debt, netWorth: assets - debt,
-      cashRes: r.cashBalance + (r.helocLimit - helocUsed), isRetired,
+      cashBal, cashRes: cashBal + (r.helocLimit - helocUsed), isRetired,
       expenseToIncome: gross > 0 ? (exp/gross)*100 : 0,
       expenseToAfterTax: afterTax > 0 ? (exp/afterTax)*100 : 0,
       liabToAsset: assets > 0 ? (debt/assets)*100 : 0,
