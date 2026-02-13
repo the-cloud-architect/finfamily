@@ -503,6 +503,11 @@ export default function FourCast() {
     for (let d = 1; d <= r.dependents; d++) {
       if (r[`dep${d}Age`] > 0) deps.push({ age: r[`dep${d}Age`], isMinor: r[`dep${d}Age`] < 18 });
     }
+    // Chunk deps into rows of 3
+    const depRows = [];
+    for (let i = 0; i < deps.length; i += 3) {
+      depRows.push(deps.slice(i, i + 3));
+    }
     return (
       <>
         <span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "10px", display: "block" }}>
@@ -511,17 +516,16 @@ export default function FourCast() {
         <span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "10px", display: "block" }}>
           Sp: {r.spouseAge}
         </span>
-        {deps.length > 0 && (
-          <span style={{ fontSize: "11px", display: "block" }}>
-            K:
-            {deps.map((d, idx) => (
+        {depRows.map((row, rowIdx) => (
+          <span key={rowIdx} style={{ fontSize: "10px", display: "block" }}>
+            {rowIdx === 0 ? "K:" : "\u00A0\u00A0\u00A0"}
+            {row.map((d, idx) => (
               <span key={idx} style={{ color: d.isMinor ? "#ec4899" : "#e2e8f0" }}>
-                {d.age}
-                {idx < deps.length - 1 ? "," : ""}
+                {d.age}{idx < row.length - 1 ? "," : ""}
               </span>
             ))}
           </span>
-        )}
+        ))}
       </>
     );
   };
