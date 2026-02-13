@@ -86,24 +86,50 @@ export const ScrollTable = ({ children }) => {
   const topRef = React.useRef(null);
   const bottomRef = React.useRef(null);
   const [sw, setSw] = useState(0);
+  const syncing = React.useRef(false);
   
   React.useEffect(() => { 
-    if (bottomRef.current) setSw(bottomRef.current.scrollWidth); 
+    const measure = () => {
+      if (bottomRef.current) setSw(bottomRef.current.scrollWidth); 
+    };
+    measure();
+    // Re-measure on resize or when children change
+    const ro = new ResizeObserver(measure);
+    if (bottomRef.current) ro.observe(bottomRef.current);
+    return () => ro.disconnect();
   }, [children]);
   
-  const sync = src => { 
+  const sync = (src) => { 
+    if (syncing.current) return;
+    syncing.current = true;
     if (src === 'top' && bottomRef.current && topRef.current) 
       bottomRef.current.scrollLeft = topRef.current.scrollLeft; 
     else if (src === 'bottom' && topRef.current && bottomRef.current) 
       topRef.current.scrollLeft = bottomRef.current.scrollLeft; 
+    syncing.current = false;
   };
   
   return (
     <div>
-      <div ref={topRef} onScroll={() => sync('top')} style={{ overflowX: "auto", height: "17px" }}>
-        <div style={{ width: sw, height: "1px" }} />
+      {/* Top scrollbar - always visible when content overflows */}
+      <div 
+        ref={topRef} 
+        onScroll={() => sync('top')} 
+        style={{ 
+          overflowX: "auto", 
+          overflowY: "hidden",
+          height: "14px",
+          marginBottom: "2px",
+        }}
+      >
+        <div style={{ width: sw > 0 ? sw : '100%', height: "1px" }} />
       </div>
-      <div ref={bottomRef} onScroll={() => sync('bottom')} style={{ overflowX: "auto" }}>
+      {/* Main scrollable content */}
+      <div 
+        ref={bottomRef} 
+        onScroll={() => sync('bottom')} 
+        style={{ overflowX: "auto" }}
+      >
         {children}
       </div>
     </div>
@@ -113,7 +139,18 @@ export const ScrollTable = ({ children }) => {
 export const AccordionSection = ({ title, icon, color, isOpen, onToggle, children }) => (
   <>
     <tr onClick={onToggle} style={{ cursor: "pointer" }}>
-      <td colSpan={42} style={{ background: `linear-gradient(90deg, ${color}20, transparent)`, padding: "6px 10px", fontWeight: "bold", color: color, fontSize: "12px" }}>
+      <td colSpan={42} style={{ 
+        background: `linear-gradient(90deg, ${color}20, ${color}10)`, 
+        padding: "6px 10px", 
+        fontWeight: "bold", 
+        color: color, 
+        fontSize: "12px",
+        position: "sticky",
+        left: 0,
+        zIndex: 10,
+        minWidth: "max-content",
+        whiteSpace: "nowrap",
+      }}>
         <span style={{ marginRight: "8px", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "0.2s" }}>▶</span>
         {icon} {title}
       </td>

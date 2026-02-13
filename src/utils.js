@@ -151,6 +151,10 @@ export const calcCumulative = (data, retireAge) => {
     } else {
       // Cash balance grows/shrinks with prior year's cash flow
       cashBal = Math.max(0, res[i-1].cashBal + res[i-1].cashFlow);
+      // HELOC changes affect cash: if helocUsed decreased from prior year, cash goes down (repayment)
+      // if helocUsed increased from prior year, cash goes up (draw)
+      const helocDelta = r.helocUsed - data[i-1].helocUsed;
+      cashBal = Math.max(0, cashBal + helocDelta);
     }
 
     const assets = cashBal + stocks + ret401k + home + rental + car + mach;

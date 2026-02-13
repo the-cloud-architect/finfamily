@@ -9,16 +9,16 @@ import { YEARS, START_YEAR } from "./constants.js";
 
 // --- Scenario payload normalization (prevents "white screen" on legacy/corrupt rows) ---
 const DEFAULT_SECTIONS = {
-  income: true,
-  dependents: true,
-  housing: true,
-  expenses: true,
-  cashflow: true,
-  assets: true,
-  liabilities: true,
-  purchases: true,
-  summary: true,
-  ratios: true,
+  income: false,
+  dependents: false,
+  housing: false,
+  expenses: false,
+  cashflow: false,
+  assets: false,
+  liabilities: false,
+  purchases: false,
+  summary: false,
+  ratios: false,
 };
 
 function _safeJsonParse(v) {
@@ -115,6 +115,27 @@ export default function FourCast() {
 
   const [data, setData] = useState(() => initData(45, 43, [10, 8, 5], 65));
 
+  // Undo history - stores previous data snapshots
+  const [undoStack, setUndoStack] = useState([]);
+  const MAX_UNDO = 50;
+
+  // Wrap setData to push current state onto undo stack
+  const setDataWithUndo = (newData) => {
+    setUndoStack(prev => {
+      const next = [...prev, JSON.parse(JSON.stringify(data))];
+      if (next.length > MAX_UNDO) next.shift();
+      return next;
+    });
+    setData(newData);
+  };
+
+  const undo = () => {
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    setUndoStack(s => s.slice(0, -1));
+    setData(prev);
+  };
+
   // Auth initialization
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -163,12 +184,22 @@ export default function FourCast() {
   };
 
   const updateAges = (newAge, newSpouseAge) => {
+    setUndoStack(prev => {
+      const next = [...prev, JSON.parse(JSON.stringify(data))];
+      if (next.length > MAX_UNDO) next.shift();
+      return next;
+    });
     setAge(newAge);
     setSpouseAge(newSpouseAge);
     setData(initData(newAge, newSpouseAge, depAges, retireAge));
   };
 
   const updateDepAge = (index, newAge) => {
+    setUndoStack(prev => {
+      const next = [...prev, JSON.parse(JSON.stringify(data))];
+      if (next.length > MAX_UNDO) next.shift();
+      return next;
+    });
     const newDepAges = [...depAges];
     newDepAges[index] = newAge;
     setDepAges(newDepAges);
@@ -176,6 +207,11 @@ export default function FourCast() {
   };
 
   const updateDeps = (count) => {
+    setUndoStack(prev => {
+      const next = [...prev, JSON.parse(JSON.stringify(data))];
+      if (next.length > MAX_UNDO) next.shift();
+      return next;
+    });
     const newCount = Math.max(0, Math.min(10, count));
     const newDepAges = depAges.slice(0, newCount);
     while (newDepAges.length < newCount) newDepAges.push(10);
@@ -186,7 +222,7 @@ export default function FourCast() {
   const update = (yearIndex, key, value) => {
     const newData = [...data];
     newData[yearIndex] = { ...newData[yearIndex], [key]: value };
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const updateYear0 = (key, value) => {
@@ -214,7 +250,7 @@ export default function FourCast() {
       }
     }
 
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const updateSingleYear = (yearIndex, key, value) => update(yearIndex, key, value);
@@ -225,7 +261,7 @@ export default function FourCast() {
     for (let i = yearIndex; i < newData.length; i++) {
       newData[i] = { ...newData[i], helocUsed: Math.min(clamped, newData[i].helocLimit) };
     }
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const updateMortgage = (yearIndex, principal, rate, years) => {
@@ -238,7 +274,7 @@ export default function FourCast() {
       mortgageYears: years,
       mortgagePayment: payment,
     };
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const updateRentalMortgage = (yearIndex, principal, rate, years) => {
@@ -251,7 +287,7 @@ export default function FourCast() {
       rentalMortgageYears: years,
       rentalMortgagePayment: payment,
     };
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const updateCarLoan = (yearIndex, principal, rate, years) => {
@@ -264,7 +300,7 @@ export default function FourCast() {
       carLoanYears: years,
       carLoanPayment: payment,
     };
-    setData(newData);
+    setDataWithUndo(newData);
   };
 
   const loadScenariosFromDB = async () => {
@@ -388,6 +424,7 @@ export default function FourCast() {
     setDepAges(nextDepAges);
     setSections({ ...DEFAULT_SECTIONS });
     setData(initData(nextAge, nextSpouseAge, nextDepAges, nextRetireAge));
+    setUndoStack([]);
 
     if (opts.clearScenarioSelection) {
       setActiveScenario(null);
@@ -437,6 +474,7 @@ export default function FourCast() {
     setActiveScenario(s.name);
     setActiveScenarioId(s.id);
     setScenarioName(s.name);
+    setUndoStack([]);
   };
 
   const deleteScenario = async (id, name) => {
@@ -755,6 +793,32 @@ export default function FourCast() {
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(251, 191, 36, 0.15)'; e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.4)'; }}
         >
           🔄 Reset
+        </button>
+
+        {/* Undo Button */}
+        <button
+          onClick={undo}
+          disabled={undoStack.length === 0}
+          style={{
+            padding: "6px 14px",
+            background: undoStack.length === 0 ? "rgba(71, 85, 105, 0.3)" : "rgba(99, 102, 241, 0.15)",
+            border: undoStack.length === 0 ? "1px solid rgba(71, 85, 105, 0.3)" : "1px solid rgba(99, 102, 241, 0.4)",
+            borderRadius: "6px",
+            color: undoStack.length === 0 ? "#475569" : "#a78bfa",
+            fontSize: "11px",
+            fontWeight: "700",
+            cursor: undoStack.length === 0 ? "not-allowed" : "pointer",
+            fontFamily: "inherit",
+            transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            opacity: undoStack.length === 0 ? 0.5 : 1,
+          }}
+          onMouseEnter={e => { if (undoStack.length > 0) { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.3)'; e.currentTarget.style.borderColor = '#6366f1'; } }}
+          onMouseLeave={e => { if (undoStack.length > 0) { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'; e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; } }}
+        >
+          ↩ Undo{undoStack.length > 0 ? ` (${undoStack.length})` : ''}
         </button>
 
         {activeScenario && (
