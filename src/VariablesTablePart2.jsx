@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cell, AccordionSection } from './components';
+import { Cell, AccordionSection, RatioCell } from './components';
 import { fmt } from './utils';
 import { COLORS } from './constants';
 
@@ -571,6 +571,64 @@ export const VariablesTablePart2Sections = ({
               {fmt(r.cashRes)}
             </td>
           ))}
+        </tr>
+      </AccordionSection>
+
+      {/* NEW: FINANCIAL RATIOS SECTION */}
+      <AccordionSection title="FINANCIAL RATIOS" icon="📐" color={COLORS.sections.ratios} isOpen={sections.ratios} onToggle={() => toggleSection('ratios')}>
+        <tr>
+          <td style={{ ...stickyTd, color: "#f472b6" }}>Expense/Income %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.expenseToIncome || 0} thresholds={{ higherIsBad: true, danger: 90, warn: 70 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#22d3ee" }}>Expense/After-Tax %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.expenseToAfterTax || 0} thresholds={{ higherIsBad: true, danger: 100, warn: 80 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#fb923c" }}>Liabilities/Assets %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.liabToAsset || 0} thresholds={{ higherIsBad: true, danger: 50, warn: 30 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#4ade80" }}>Savings Rate %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.savingsRate || 0} thresholds={{ higherIsBad: false, danger: 10, warn: 20 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#a78bfa" }}>Debt/Income %</td>
+          {enriched.map((r, i) => {
+            const debtToIncome = r.gross > 0 ? (r.debt / r.gross) * 100 : 0;
+            return (
+              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                <RatioCell value={debtToIncome} thresholds={{ higherIsBad: true, danger: 40, warn: 30 }} />
+              </td>
+            );
+          })}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa" }}>Assets/Liabilities</td>
+          {enriched.map((r, i) => {
+            const assetToLiab = r.debt > 0 ? (r.assets / r.debt) * 100 : (r.assets > 0 ? 999 : 100);
+            return (
+              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                <RatioCell value={assetToLiab} thresholds={{ higherIsBad: false, danger: 100, warn: 200 }} />
+              </td>
+            );
+          })}
         </tr>
       </AccordionSection>
     </>

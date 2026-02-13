@@ -43,7 +43,7 @@ export const Charts = ({ enriched, retireAge, age, retirementAnalysis }) => {
         ))}
       </div>
 
-      {/* Timeline Header */}
+      {/* Timeline Header - Ages in TWO ROWS */}
       <div style={{ background: "rgba(30,41,59,0.8)", borderRadius: "8px", padding: "10px", border: "1px solid rgba(148,163,184,0.2)", overflowX: "auto" }}>
         <div style={{ display: "flex", gap: "4px", minWidth: "max-content" }}>
           {enriched.map((r) => {
@@ -57,7 +57,9 @@ export const Charts = ({ enriched, retireAge, age, retirementAnalysis }) => {
             return (
               <div key={r.year} style={{ textAlign: "center", padding: "5px 7px", background: isRet(r.year) ? "rgba(251,146,60,0.2)" : "rgba(99,102,241,0.1)", borderRadius: "4px", minWidth: "68px", fontSize: "13px" }}>
                 <div style={{ color: isRet(r.year) ? "#fb923c" : "#a78bfa", fontWeight: "bold" }}>{r.year}</div>
-                <div style={{ color: "#64748b" }}>You:{r.age} Sp:{r.spouseAge}</div>
+                {/* AGES IN TWO SEPARATE ROWS */}
+                <div style={{ color: "#64748b" }}>You: {r.age}</div>
+                <div style={{ color: "#64748b" }}>Sp: {r.spouseAge}</div>
                 {depsRow1.length > 0 && (
                   <div>K:{depsRow1.map((d, idx) => (
                     <span key={idx} style={{ color: d.isMinor ? "#ec4899" : "#e2e8f0" }}>
@@ -148,6 +150,38 @@ export const Charts = ({ enriched, retireAge, age, retirementAnalysis }) => {
             <Line yAxisId="left" type="monotone" dataKey="nw" stroke="#a78bfa" strokeWidth={3} dot={false} name="Net Worth"/>
             <Line yAxisId="right" type="monotone" dataKey="primaryMtg" stroke="#f97316" strokeWidth={2} dot={false} name="Primary Mortgage"/>
             <Line yAxisId="right" type="monotone" dataKey="rentalMtg" stroke="#f59e0b" strokeWidth={2} dot={false} name="Rental Mortgage"/>
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Financial Ratios Chart */}
+      <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "14px", border: "1px solid rgba(148,163,184,0.1)" }}>
+        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#14b8a6" }}>📊 Financial Ratios</h3>
+        <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "8px" }}>
+          <span style={{ color: "#f472b6" }}>■</span> Expense/Income | 
+          <span style={{ color: "#22d3ee" }}> ■</span> Liabilities/Assets |
+          <span style={{ color: "#a78bfa" }}> ■</span> Savings Rate
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <ComposedChart data={enriched.map(r => ({ 
+            year: r.year, 
+            expenseToIncome: r.expenseToIncome || 0,
+            liabToAsset: r.liabToAsset || 0,
+            savingsRate: r.savingsRate || 0
+          }))}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155"/>
+            <XAxis dataKey="year" stroke="#64748b" fontSize={11}/>
+            <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => v.toFixed(0) + '%'}/>
+            <Tooltip 
+              contentStyle={{ background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", fontSize: "13px" }} 
+              formatter={(v) => v.toFixed(1) + '%'}
+            />
+            <Legend wrapperStyle={{ fontSize: "13px" }}/>
+            <ReferenceLine x={retireYear} stroke="#fb923c" strokeDasharray="5 5" />
+            <ReferenceLine y={100} stroke="#ef4444" strokeDasharray="3 3" label={{ value: '100%', fill: '#ef4444', fontSize: 10 }} />
+            <Line type="monotone" dataKey="expenseToIncome" stroke="#f472b6" strokeWidth={2} dot={false} name="Expense/Income %"/>
+            <Line type="monotone" dataKey="liabToAsset" stroke="#22d3ee" strokeWidth={2} dot={false} name="Liabilities/Assets %"/>
+            <Line type="monotone" dataKey="savingsRate" stroke="#a78bfa" strokeWidth={2} dot={false} name="Savings Rate %"/>
           </ComposedChart>
         </ResponsiveContainer>
       </div>

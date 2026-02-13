@@ -32,9 +32,11 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
     onChange(pct || num ? parseFloat(tmp) || 0 : parseInt(tmp) || 0); 
   };
   
-  const textColor = isYear0 ? COLORS.year0Text : isIncome ? COLORS.income : isExpense ? COLORS.expense : COLORS.normalText;
-  const bgColor = isYear0 ? COLORS.year0Bg : COLORS.normalBg;
-  const borderStyle = isYear0 ? COLORS.year0Border : COLORS.normalBorder;
+  // ALL editable cells get: white background, black text, red border
+  // This applies to Year 0 AND all future years
+  const inputTextColor = COLORS.inputText;  // #000000 (black)
+  const inputBgColor = COLORS.inputBg;      // #ffffff (white)
+  const inputBorderStyle = COLORS.inputBorder; // 2px solid #ef4444 (red)
   
   if (ed) return (
     <input 
@@ -45,33 +47,36 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
       onKeyDown={e => e.key === "Enter" && done()} 
       autoFocus 
       style={{ 
-        width: "60px", // Reduced from 66px
-        padding: "2px", // Reduced from 3px
+        width: "60px",
+        padding: "2px",
         border: "2px solid #3b82f6", 
         borderRadius: "4px", 
-        background: isYear0 ? "#fef3c7" : "#1e293b", 
-        color: "#000", 
-        fontSize: "11px", // Reduced from 12px
-        textAlign: "center" 
+        background: "#ffffff", 
+        color: "#000000", 
+        fontSize: "11px",
+        textAlign: "center",
+        outline: "none"
       }} 
     />
   );
   
+  // Editable cell styling - white bg, black text, red border for ALL input cells
   return (
     <span 
       onClick={() => { setTmp(value); setEd(true); }} 
       style={{ 
         cursor: "pointer", 
-        padding: "2px 4px", // Reduced from 3px 5px
+        padding: "2px 4px",
         borderRadius: "3px", 
-        fontSize: "11px", // Reduced from 12px
-        background: bgColor, 
-        border: borderStyle, 
+        fontSize: "11px",
+        background: inputBgColor,
+        border: inputBorderStyle,
         display: "inline-block", 
-        minWidth: "50px", // Reduced from 54px
+        minWidth: "50px",
         textAlign: "center", 
-        color: textColor, 
-        fontWeight: isYear0 ? "bold" : "normal" 
+        color: inputTextColor,
+        fontWeight: "600",
+        boxShadow: "0 1px 2px rgba(239, 68, 68, 0.2)"
       }}
     >
       {num ? value : pct ? value+"%" : (value && value.toLocaleString ? value.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0}) : "$0")}
@@ -110,7 +115,7 @@ export const ScrollTable = ({ children }) => {
 export const AccordionSection = ({ title, icon, color, isOpen, onToggle, children }) => (
   <>
     <tr onClick={onToggle} style={{ cursor: "pointer" }}>
-      <td colSpan={36} style={{ background: `linear-gradient(90deg, ${color}20, transparent)`, padding: "6px 10px", fontWeight: "bold", color: color, fontSize: "12px" }}>
+      <td colSpan={42} style={{ background: `linear-gradient(90deg, ${color}20, transparent)`, padding: "6px 10px", fontWeight: "bold", color: color, fontSize: "12px" }}>
         <span style={{ marginRight: "8px", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "0.2s" }}>▶</span>
         {icon} {title}
       </td>
@@ -118,3 +123,35 @@ export const AccordionSection = ({ title, icon, color, isOpen, onToggle, childre
     {isOpen && children}
   </>
 );
+
+// Ratio display component for the ratios section
+export const RatioCell = ({ value, thresholds }) => {
+  // thresholds: { good: number, warning: number, higherIsBad: boolean }
+  let color = COLORS.success;
+  if (thresholds) {
+    if (thresholds.higherIsBad) {
+      if (value > thresholds.danger) color = COLORS.danger;
+      else if (value > thresholds.warn) color = COLORS.warning;
+    } else {
+      if (value < thresholds.danger) color = COLORS.danger;
+      else if (value < thresholds.warn) color = COLORS.warning;
+    }
+  }
+  
+  return (
+    <span style={{
+      padding: "2px 4px",
+      borderRadius: "3px",
+      fontSize: "11px",
+      background: `${color}20`,
+      border: `1px solid ${color}50`,
+      display: "inline-block",
+      minWidth: "50px",
+      textAlign: "center",
+      color: color,
+      fontWeight: "600"
+    }}>
+      {value === Infinity || value > 1000 ? "∞" : value.toFixed(1) + "%"}
+    </span>
+  );
+};

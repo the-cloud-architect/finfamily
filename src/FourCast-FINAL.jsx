@@ -34,10 +34,16 @@ export default function FourCast() {
     assets: true, 
     liabilities: true, 
     purchases: true, 
-    summary: true 
+    summary: true,
+    ratios: true  // NEW: ratios section
   });
   
   const toggleSection = (key) => setSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // Set document title
+  useEffect(() => {
+    document.title = "4cast";
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,6 +58,7 @@ export default function FourCast() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Load scenarios and auto-load last used scenario when user logs in
   useEffect(() => {
     if (user) {
       loadScenariosFromDB();
@@ -81,10 +88,17 @@ export default function FourCast() {
         spouseAge: s.data.spouseAge,
         retireAge: s.data.retireAge,
         depAges: s.data.depAges,
+        sections: s.data.sections, // Save section state
         updated_at: s.updated_at
       }));
       
       setScenarios(transformedScenarios);
+      
+      // AUTO-LOAD: Load the most recently updated scenario automatically
+      if (transformedScenarios.length > 0) {
+        const lastScenario = transformedScenarios[0]; // Already sorted by updated_at desc
+        loadScenario(lastScenario);
+      }
     } catch (error) {
       console.error('Error loading scenarios:', error);
       alert('Error loading scenarios: ' + error.message);
@@ -218,7 +232,8 @@ export default function FourCast() {
     setSaving(true);
     try {
       const existingScenario = scenarios.find(s => s.name === scenarioName);
-      const scenarioPayload = { data: JSON.parse(JSON.stringify(data)), age, spouseAge, retireAge, depAges };
+      // Include sections state in saved data
+      const scenarioPayload = { data: JSON.parse(JSON.stringify(data)), age, spouseAge, retireAge, depAges, sections };
       if (existingScenario) {
         const { error } = await supabase.from('scenarios').update({ data: scenarioPayload, updated_at: new Date().toISOString() }).eq('id', existingScenario.id);
         if (error) throw error;
@@ -238,7 +253,8 @@ export default function FourCast() {
     if (!activeScenarioId) return;
     setSaving(true);
     try {
-      const scenarioPayload = { data: JSON.parse(JSON.stringify(data)), age, spouseAge, retireAge, depAges };
+      // Include sections state in saved data
+      const scenarioPayload = { data: JSON.parse(JSON.stringify(data)), age, spouseAge, retireAge, depAges, sections };
       const { error } = await supabase.from('scenarios').update({ data: scenarioPayload, updated_at: new Date().toISOString() }).eq('id', activeScenarioId);
       if (error) throw error;
       await loadScenariosFromDB();
@@ -247,9 +263,18 @@ export default function FourCast() {
   };
 
   const loadScenario = (s) => {
-    setData(s.data); setAge(s.age); setSpouseAge(s.spouseAge || 43);
-    setRetireAge(s.retireAge); setDepAges(s.depAges || [10, 8, 5]);
-    setActiveScenario(s.name); setActiveScenarioId(s.id); setScenarioName(s.name);
+    setData(s.data); 
+    setAge(s.age); 
+    setSpouseAge(s.spouseAge || 43);
+    setRetireAge(s.retireAge); 
+    setDepAges(s.depAges || [10, 8, 5]);
+    // Restore section state if saved
+    if (s.sections) {
+      setSections(s.sections);
+    }
+    setActiveScenario(s.name); 
+    setActiveScenarioId(s.id); 
+    setScenarioName(s.name);
   };
 
   const deleteScenario = async (id, name) => {
@@ -277,15 +302,17 @@ export default function FourCast() {
   const bg = (yr, i) => isRet(yr) ? "rgba(251,146,60,0.08)" : i % 5 === 0 ? "rgba(99,102,241,0.05)" : "transparent";
   const thStyle = { padding: "7px 4px", textAlign: "center", borderBottom: "2px solid #6366f1", fontSize: "11px", minWidth: "84px" };
 
+  // UPDATED: Ages in TWO ROWS
   const ageHeader = (r) => {
     const deps = [];
     for (let d = 1; d <= r.dependents; d++) if (r[`dep${d}Age`] > 0) deps.push({ age: r[`dep${d}Age`], isMinor: r[`dep${d}Age`] < 18 });
     return (
       <>
-        <span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "10px" }}>You:{r.age} Sp:{r.spouseAge}</span>
-        <br/>
+        {/* AGES ON SEPARATE ROWS */}
+        <span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "10px", display: "block" }}>You: {r.age}</span>
+        <span style={{ color: isRet(r.year) ? "#fb923c" : "#64748b", fontSize: "10px", display: "block" }}>Sp: {r.spouseAge}</span>
         {deps.length > 0 && (
-          <span style={{ fontSize: "11px" }}>
+          <span style={{ fontSize: "11px", display: "block" }}>
             K:{deps.map((d, idx) => (
               <span key={idx} style={{ color: d.isMinor ? "#ec4899" : "#e2e8f0" }}>{d.age}{idx < deps.length - 1 ? ',' : ''}</span>
             ))}
@@ -324,7 +351,7 @@ export default function FourCast() {
           <button onClick={handleSignOut} style={{ padding: "4px 10px", background: "rgba(239,68,68,0.2)", border: "1px solid #ef4444", borderRadius: "4px", color: "#ef4444", fontSize: "12px", cursor: "pointer" }}>Sign Out</button>
         </div>
         <AnimatedTitle />
-        <p style={{ color: "#64748b", fontSize: "13px", margin: "5px 0 0", letterSpacing: "2px" }}>35-YEAR HOUSEHOLD PROJECTION</p>
+        <p style={{ color: "#64748b", fontSize: "13px", margin: "5px 0 0", letterSpacing: "2px" }}>40-YEAR HOUSEHOLD PROJECTION</p>
       </header>
       
       {/* Controls */}
@@ -443,7 +470,7 @@ export default function FourCast() {
       )}
       
       <footer style={{ marginTop: "24px", textAlign: "center", color: "#475569", fontSize: "11px" }}>
-        4Cast • Retire: {retireYear} (Age {retireAge}) • ☁️ Synced to Cloud
+        4Cast • {START_YEAR}-{START_YEAR + YEARS - 1} • Retire: {retireYear} (Age {retireAge}) • ☁️ Synced to Cloud
       </footer>
     </div>
   );
