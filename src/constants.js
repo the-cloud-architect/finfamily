@@ -12,10 +12,10 @@ export const COLORS = {
   normalBg: "rgba(59,130,246,0.1)",
   normalBorder: "1px dashed rgba(59,130,246,0.3)",
   
-  // NEW: Input cell styling - white bg, black text, red border
-  inputText: "#000000",
-  inputBg: "#ffffff",
-  inputBorder: "2px solid #ef4444",
+  // FIXED: Input cell styling - dark bg, white text, subtle border
+  inputText: "#e2e8f0",
+  inputBg: "rgba(30, 41, 59, 0.9)",
+  inputBorder: "1px solid rgba(99, 102, 241, 0.4)",
   
   primary: "#a78bfa",
   success: "#22c55e",

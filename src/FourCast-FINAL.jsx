@@ -655,28 +655,39 @@ export default function FourCast() {
         padding: "12px",
       }}
     >
-      <header style={{ textAlign: "center", marginBottom: "16px", position: "relative" }}>
-        <div style={{ position: "absolute", right: "0", top: "0", display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "13px", color: "#94a3b8" }}>{user.email}</span>
-          <button
-            onClick={handleSignOut}
-            style={{
-              padding: "4px 10px",
-              background: "rgba(239,68,68,0.2)",
-              border: "1px solid #ef4444",
-              borderRadius: "4px",
-              color: "#ef4444",
-              fontSize: "12px",
-              cursor: "pointer",
-            }}
-          >
-            Sign Out
-          </button>
-        </div>
+      <header style={{ textAlign: "center", marginBottom: "16px" }}>
         <AnimatedTitle />
         <p style={{ color: "#64748b", fontSize: "13px", margin: "5px 0 0", letterSpacing: "2px" }}>
           40-YEAR HOUSEHOLD PROJECTION
         </p>
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center", 
+          gap: "10px", 
+          marginTop: "10px",
+          flexWrap: "wrap"
+        }}>
+          <span style={{ fontSize: "12px", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "200px", whiteSpace: "nowrap" }}>{user.email}</span>
+          <button
+            onClick={handleSignOut}
+            style={{
+              padding: "4px 12px",
+              background: "rgba(239,68,68,0.15)",
+              border: "1px solid rgba(239,68,68,0.4)",
+              borderRadius: "6px",
+              color: "#f87171",
+              fontSize: "11px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.3)'; e.currentTarget.style.borderColor = '#ef4444'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)'; }}
+          >
+            Sign Out
+          </button>
+        </div>
       </header>
 
       {/* Controls */}
@@ -779,24 +790,39 @@ export default function FourCast() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "12px", justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "14px", justifyContent: "center" }}>
+        <style>{`
+          @keyframes tabGlow { 0%, 100% { box-shadow: 0 0 12px rgba(99, 102, 241, 0.3); } 50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); } }
+          .tab-btn { position: relative; overflow: hidden; }
+          .tab-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
+          .tab-btn:hover::after { width: 200px; height: 200px; }
+        `}</style>
         {[
           ["variables", "⚙️ Forecast"],
           ["charts", "📈 Charts"],
         ].map(([k, v]) => (
           <button
             key={k}
+            className="tab-btn"
             onClick={() => setTab(k)}
             style={{
-              padding: "7px 19px",
-              background: tab === k ? "linear-gradient(135deg, #6366f1, #4f46e5)" : "transparent",
-              border: tab === k ? "none" : "1px solid rgba(148,163,184,0.2)",
-              borderRadius: "5px",
+              padding: "10px 28px",
+              background: tab === k ? "linear-gradient(135deg, #6366f1, #4f46e5)" : "rgba(30, 41, 59, 0.8)",
+              border: tab === k ? "1px solid rgba(99, 102, 241, 0.6)" : "1px solid rgba(148,163,184,0.2)",
+              borderRadius: "10px",
               color: tab === k ? "#fff" : "#94a3b8",
-              fontSize: "13px",
-              fontWeight: "600",
+              fontSize: "14px",
+              fontWeight: "700",
+              fontFamily: "inherit",
               cursor: "pointer",
+              letterSpacing: "0.5px",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              transform: tab === k ? "scale(1.02)" : "scale(1)",
+              animation: tab === k ? "tabGlow 2s ease-in-out infinite" : "none",
+              boxShadow: tab === k ? "0 4px 16px rgba(99, 102, 241, 0.35)" : "none",
             }}
+            onMouseEnter={e => { if (tab !== k) { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; e.currentTarget.style.color = '#c4b5fd'; e.currentTarget.style.transform = 'scale(1.03)'; } }}
+            onMouseLeave={e => { if (tab !== k) { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.transform = 'scale(1)'; } }}
           >
             {v}
           </button>

@@ -32,12 +32,6 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
     onChange(pct || num ? parseFloat(tmp) || 0 : parseInt(tmp) || 0); 
   };
   
-  // ALL editable cells get: white background, black text, red border
-  // This applies to Year 0 AND all future years
-  const inputTextColor = COLORS.inputText;  // #000000 (black)
-  const inputBgColor = COLORS.inputBg;      // #ffffff (white)
-  const inputBorderStyle = COLORS.inputBorder; // 2px solid #ef4444 (red)
-  
   if (ed) return (
     <input 
       type="number" 
@@ -48,19 +42,20 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
       autoFocus 
       style={{ 
         width: "60px",
-        padding: "2px",
-        border: "2px solid #3b82f6", 
+        padding: "2px 4px",
+        border: "1px solid #6366f1", 
         borderRadius: "4px", 
-        background: "#ffffff", 
-        color: "#000000", 
+        background: "rgba(30, 41, 59, 0.95)", 
+        color: "#e2e8f0", 
         fontSize: "11px",
+        fontFamily: "inherit",
         textAlign: "center",
-        outline: "none"
+        outline: "none",
+        boxShadow: "0 0 0 2px rgba(99, 102, 241, 0.3)"
       }} 
     />
   );
   
-  // Editable cell styling - white bg, black text, red border for ALL input cells
   return (
     <span 
       onClick={() => { setTmp(value); setEd(true); }} 
@@ -69,15 +64,18 @@ export const Cell = ({ value, onChange, pct, num, isYear0, isIncome, isExpense }
         padding: "2px 4px",
         borderRadius: "3px", 
         fontSize: "11px",
-        background: inputBgColor,
-        border: inputBorderStyle,
+        fontFamily: "inherit",
+        background: COLORS.inputBg,
+        border: COLORS.inputBorder,
         display: "inline-block", 
         minWidth: "50px",
         textAlign: "center", 
-        color: inputTextColor,
+        color: COLORS.inputText,
         fontWeight: "600",
-        boxShadow: "0 1px 2px rgba(239, 68, 68, 0.2)"
+        transition: "border-color 0.15s ease, background 0.15s ease",
       }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; e.currentTarget.style.background = COLORS.inputBg; }}
     >
       {num ? value : pct ? value+"%" : (value && value.toLocaleString ? value.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0}) : "$0")}
     </span>
@@ -126,7 +124,6 @@ export const AccordionSection = ({ title, icon, color, isOpen, onToggle, childre
 
 // Ratio display component for the ratios section
 export const RatioCell = ({ value, thresholds }) => {
-  // thresholds: { good: number, warning: number, higherIsBad: boolean }
   let color = COLORS.success;
   if (thresholds) {
     if (thresholds.higherIsBad) {
@@ -143,6 +140,7 @@ export const RatioCell = ({ value, thresholds }) => {
       padding: "2px 4px",
       borderRadius: "3px",
       fontSize: "11px",
+      fontFamily: "inherit",
       background: `${color}20`,
       border: `1px solid ${color}50`,
       display: "inline-block",
