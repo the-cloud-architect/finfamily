@@ -11,6 +11,8 @@ export const VariablesTablePart2Sections = ({
   update,
   updateYear0,
   updateSingleYear,
+  updateCascade,
+  updateCascadeAll,
   updateHelocUsed,
   updateMortgage,
   updateRentalMortgage,
@@ -38,7 +40,7 @@ export const VariablesTablePart2Sections = ({
             <td style={{...stickyTd, color: COLORS.income}}>{l}</td>
             {enriched.map((r, i) => (
               <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-                <Cell value={data[i][k]} onChange={v => update(i, k, v)} isYear0={i === 0} isIncome={true} />
+                <Cell value={data[i][k]} onChange={v => updateCascade(i, k, v)} isYear0={i === 0} isIncome={true} />
               </td>
             ))}
           </tr>
@@ -178,7 +180,7 @@ export const VariablesTablePart2Sections = ({
           <td style={{...stickyTd, color: COLORS.expense}}>Other Debt</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <Cell value={data[i].otherDebt} onChange={v => updateSingleYear(i, "otherDebt", v)} isYear0={i === 0} isExpense={true} />
+              <Cell value={data[i].otherDebt} onChange={v => updateCascadeAll(i, "otherDebt", v)} isYear0={i === 0} isExpense={true} />
             </td>
           ))}
         </tr>

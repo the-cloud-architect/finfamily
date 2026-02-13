@@ -255,11 +255,36 @@ export default function FourCast() {
 
   const updateSingleYear = (yearIndex, key, value) => update(yearIndex, key, value);
 
-  const updateHelocUsed = (yearIndex, value) => {
-    const clamped = Math.min(value, data[yearIndex].helocLimit);
+  // Cascade update: sets value for yearIndex and all following years (up to retirement for income fields)
+  const updateCascade = (yearIndex, key, value) => {
+    const newData = [...data];
+    const incomeKeys = ["cashIncome", "rsuIncome", "match401k", "investmentIncome", "rentalIncome"];
+    const isIncomeKey = incomeKeys.includes(key);
+    
+    for (let i = yearIndex; i < newData.length; i++) {
+      // For income fields, only cascade up to (but not including) retirement year
+      if (isIncomeKey && (newData[i].age >= retireAge) && i > yearIndex) break;
+      newData[i] = { ...newData[i], [key]: value };
+    }
+    setDataWithUndo(newData);
+  };
+
+  // Cascade for otherDebt and helocUsed - cascades to all following years
+  const updateCascadeAll = (yearIndex, key, value) => {
     const newData = [...data];
     for (let i = yearIndex; i < newData.length; i++) {
-      newData[i] = { ...newData[i], helocUsed: Math.min(clamped, newData[i].helocLimit) };
+      newData[i] = { ...newData[i], [key]: value };
+    }
+    setDataWithUndo(newData);
+  };
+
+  const updateHelocUsed = (yearIndex, value) => {
+    // Always clamp against the global helocLimit (year 0)
+    const limit = data[0].helocLimit;
+    const clamped = Math.min(value, limit);
+    const newData = [...data];
+    for (let i = yearIndex; i < newData.length; i++) {
+      newData[i] = { ...newData[i], helocUsed: clamped };
     }
     setDataWithUndo(newData);
   };
@@ -671,6 +696,8 @@ export default function FourCast() {
     update,
     updateYear0,
     updateSingleYear,
+    updateCascade,
+    updateCascadeAll,
     updateHelocUsed,
     updateMortgage,
     updateRentalMortgage,
@@ -941,6 +968,36 @@ export default function FourCast() {
 
       {tab === "variables" && (
         <>
+          {/* Expand/Collapse All */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+            <button
+              onClick={() => {
+                const allOpen = Object.values(sections).every(v => v);
+                const newVal = !allOpen;
+                setSections(Object.fromEntries(Object.keys(sections).map(k => [k, newVal])));
+              }}
+              style={{
+                padding: "5px 14px",
+                background: "rgba(99, 102, 241, 0.12)",
+                border: "1px solid rgba(99, 102, 241, 0.35)",
+                borderRadius: "6px",
+                color: "#a78bfa",
+                fontSize: "11px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.12)'; }}
+            >
+              {Object.values(sections).every(v => v) ? '▼ Collapse All' : '▶ Expand All'}
+            </button>
+          </div>
+
           {/* Key Ratios & Net Worth */}
           <div style={{ marginBottom: "14px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "10px" }}>
@@ -1022,35 +1079,7 @@ export default function FourCast() {
                     </tr>
                   </thead>
                   <tbody>
-                    <VariablesTablePart2Sections {...tableProps} sectionGroup="upper" />
-                  </tbody>
-                </table>
-
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
-                  <thead>
-                    <tr>
-                      <th style={stickyTh}>Category</th>
-                      {enriched.map((r, i) => (
-                        <th
-                          key={r.year}
-                          style={{
-                            ...thStyle,
-                            background: isRet(r.year)
-                              ? "rgba(251,146,60,0.15)"
-                              : i % 5 === 0
-                                ? "rgba(99,102,241,0.1)"
-                                : "transparent",
-                          }}
-                        >
-                          {r.year}
-                          <br />
-                          {ageHeader(r)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <VariablesTablePart2Sections {...tableProps} sectionGroup="lower" />
+                    <VariablesTablePart2Sections {...tableProps} />
                   </tbody>
                 </table>
               </div>
