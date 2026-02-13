@@ -14,15 +14,16 @@ export const calcMonthlyPayment = (principal, annualRate, years) => {
 
 export const initData = (age = 45, spouseAge = 43, depAges = [10, 8, 5], retireAge = 65) => {
   const data = [];
-  const YEARS = 35;
-  const START_YEAR = 2025;
+  const YEARS = 40;
+  const START_YEAR = 2026;
   const retireYearIdx = retireAge - age;
   const primaryMtgPayment = calcMonthlyPayment(200000, 6.5, 25) * 12;
   const rentalMtgPayment = calcMonthlyPayment(100000, 6.5, 20) * 12;
   
   for (let i = 0; i < YEARS; i++) {
     const yr = START_YEAR + i;
-    const isRetired = i > retireYearIdx;
+    // Retirement starts the year AFTER retireAge — you work through retireAge year
+    const isRetired = (age + i) > retireAge;
     const incomeMultiplier = isRetired ? 1 : Math.pow(1.1, Math.floor(i / 5));
     const carPurchase = (yr >= 2028 && (yr - 2028) % 5 === 0) ? 20000 : 0;
     

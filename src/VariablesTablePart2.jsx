@@ -20,10 +20,17 @@ export const VariablesTablePart2Sections = ({
   bg,
   stickyTd,
   cellStyle,
-  depAges
+  depAges,
+  sectionGroup
 }) => {
+  // sectionGroup: 'upper' = Income, Dependents, Liabilities
+  //               'lower' = Housing, Expenses, Cash Flow, Assets, Purchases, Summary, Ratios
+  //               undefined/null = all (backwards compat)
+  const showUpper = !sectionGroup || sectionGroup === 'upper';
+  const showLower = !sectionGroup || sectionGroup === 'lower';
   return (
     <>
+      {showUpper && (<>
       {/* INCOME SECTION */}
       <AccordionSection title="INCOME" icon="💰" color={COLORS.sections.income} isOpen={sections.income} onToggle={() => toggleSection('income')}>
         {[["cashIncome", "Cash"], ["rsuIncome", "RSU"], ["match401k", "401k Match"], ["investmentIncome", "Investment Income"], ["rentalIncome", "Rental Income"]].map(([k, l]) => (
@@ -201,7 +208,9 @@ export const VariablesTablePart2Sections = ({
           ))}
         </tr>
       </AccordionSection>
+      </>)}
 
+      {showLower && (<>
       {/* HOUSING COSTS SECTION */}
       <AccordionSection title="HOUSING COSTS" icon="🏠" color={COLORS.sections.housing} isOpen={sections.housing} onToggle={() => toggleSection('housing')}>
         <tr>
@@ -631,6 +640,7 @@ export const VariablesTablePart2Sections = ({
           })}
         </tr>
       </AccordionSection>
+      </>)}
     </>
   );
 };

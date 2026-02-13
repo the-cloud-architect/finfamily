@@ -167,129 +167,59 @@ export const Charts = ({ enriched, retireAge, age, retirementAnalysis }) => {
         </ResponsiveContainer>
       </div>
       
-      {/* Net Worth & Mortgages Chart */}
+      {/* Net Worth, Mortgages & Ratios - ALL IN ONE */}
       <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "14px", border: "1px solid rgba(148,163,184,0.1)" }}>
-        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#a78bfa" }}>🏦 Net Worth & Mortgages</h3>
-        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px", lineHeight: 1.6 }}>
-          <span style={{ color: "#a78bfa" }}>■</span> Net Worth (left) &nbsp;
-          <span style={{ color: "#f97316" }}>■</span> Primary Mtg (right) &nbsp;
-          <span style={{ color: "#f59e0b" }}>■</span> Rental Mtg (right)
+        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#a78bfa" }}>🏦 Net Worth, Mortgages & Financial Ratios</h3>
+        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px", lineHeight: 1.8 }}>
+          <span style={{ color: "#a78bfa" }}>━━</span> Net Worth (left $) &nbsp;&nbsp;
+          <span style={{ color: "#f97316" }}>━━</span> Primary Mtg (right $) &nbsp;&nbsp;
+          <span style={{ color: "#f59e0b" }}>━━</span> Rental Mtg (right $) &nbsp;&nbsp;
+          <br/>
+          <span style={{ color: "#f472b6" }}>┅┅</span> Expense/Income % (far right) &nbsp;&nbsp;
+          <span style={{ color: "#22d3ee" }}>┅┅</span> Liabilities/Assets % (far right) &nbsp;&nbsp;
+          <span style={{ color: "#4ade80" }}>┅┅</span> Savings Rate % (far right)
         </div>
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={360}>
           <ComposedChart data={enriched.map(r => ({ 
             year: r.year, 
             nw: r.netWorth, 
             primaryMtg: r.mortgageBalEnd, 
             rentalMtg: r.rentalMortgageBalEnd,
-          }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155"/>
-            <XAxis dataKey="year" stroke="#64748b" fontSize={12}/>
-            <YAxis yAxisId="left" stroke="#a78bfa" fontSize={12} tickFormatter={fmt} orientation="left"/>
-            <YAxis yAxisId="right" stroke="#f97316" fontSize={12} tickFormatter={fmt} orientation="right"/>
-            <Tooltip 
-              contentStyle={{ background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", fontSize: "13px" }} 
-              formatter={fmt}
-            />
-            <Legend wrapperStyle={{ fontSize: "13px" }}/>
-            <ReferenceLine yAxisId="left" x={retireYear} stroke="#fb923c" strokeDasharray="5 5" label={{ value: 'Retire', fill: '#fb923c', fontSize: 12 }} />
-            <Line yAxisId="left" type="monotone" dataKey="nw" stroke="#a78bfa" strokeWidth={3} dot={false} name="Net Worth"/>
-            <Line yAxisId="right" type="monotone" dataKey="primaryMtg" stroke="#f97316" strokeWidth={2} dot={false} name="Primary Mortgage"/>
-            <Line yAxisId="right" type="monotone" dataKey="rentalMtg" stroke="#f59e0b" strokeWidth={2} dot={false} name="Rental Mortgage"/>
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Ratios Over Time Chart (on NW chart) */}
-      <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "14px", border: "1px solid rgba(148,163,184,0.1)" }}>
-        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#14b8a6" }}>📐 Ratios Over Time</h3>
-        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px", lineHeight: 1.6 }}>
-          <span style={{ color: "#f472b6" }}>⬥</span> Expense/Income % &nbsp;
-          <span style={{ color: "#22d3ee" }}>⬥</span> Liabilities/Assets %  &nbsp;
-          <span style={{ color: "#a78bfa" }}>⬥</span> Savings Rate %
-        </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <ComposedChart data={enriched.map(r => ({ 
-            year: r.year, 
-            expenseToIncome: r.expenseToIncome || 0,
-            liabToAsset: r.liabToAsset || 0,
-            savingsRate: r.savingsRate || 0,
+            expenseToIncome: Math.min(r.expenseToIncome || 0, 300),
+            liabToAsset: Math.min(r.liabToAsset || 0, 300),
+            savingsRate: Math.max(Math.min(r.savingsRate || 0, 300), -300),
           }))}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155"/>
             <XAxis dataKey="year" stroke="#64748b" fontSize={11}/>
-            <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => v.toFixed(0) + '%'} domain={[0, 'auto']}/>
+            {/* Left axis: Net Worth */}
+            <YAxis yAxisId="nw" stroke="#a78bfa" fontSize={11} tickFormatter={fmt} orientation="left"/>
+            {/* Right axis: Mortgages (own scale) */}
+            <YAxis yAxisId="mtg" stroke="#f97316" fontSize={11} tickFormatter={fmt} orientation="right"/>
+            {/* Far right: Ratios % — hidden axis, shares right side but with own domain */}
+            <YAxis yAxisId="pct" stroke="#f472b6" fontSize={10} tickFormatter={(v) => v.toFixed(0) + '%'} orientation="right" hide/>
             <Tooltip 
               contentStyle={{ background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", fontSize: "13px" }} 
-              formatter={(v) => v.toFixed(1) + '%'}
+              formatter={(v, name) => {
+                if (name.includes('%')) return v.toFixed(1) + '%';
+                return fmt(v);
+              }}
             />
-            <Legend wrapperStyle={{ fontSize: "13px" }}/>
-            <ReferenceLine x={retireYear} stroke="#fb923c" strokeDasharray="5 5" label={{ value: 'Retire', fill: '#fb923c', fontSize: 11 }} />
-            <ReferenceLine y={100} stroke="#ef4444" strokeDasharray="3 3" label={{ value: '100%', fill: '#ef4444', fontSize: 10 }} />
-            <Line type="monotone" dataKey="expenseToIncome" stroke="#f472b6" strokeWidth={2} dot={false} name="Expense/Income %"/>
-            <Line type="monotone" dataKey="liabToAsset" stroke="#22d3ee" strokeWidth={2} dot={false} name="Liabilities/Assets %"/>
-            <Line type="monotone" dataKey="savingsRate" stroke="#a78bfa" strokeWidth={2} dot={false} name="Savings Rate %"/>
+            <Legend wrapperStyle={{ fontSize: "12px" }}/>
+            <ReferenceLine yAxisId="nw" x={retireYear} stroke="#fb923c" strokeDasharray="5 5" label={{ value: 'Retire', fill: '#fb923c', fontSize: 11 }} />
+            {/* Net Worth */}
+            <Line yAxisId="nw" type="monotone" dataKey="nw" stroke="#a78bfa" strokeWidth={3} dot={false} name="Net Worth"/>
+            {/* Mortgages on their own scale */}
+            <Line yAxisId="mtg" type="monotone" dataKey="primaryMtg" stroke="#f97316" strokeWidth={2} dot={false} name="Primary Mortgage"/>
+            <Line yAxisId="mtg" type="monotone" dataKey="rentalMtg" stroke="#f59e0b" strokeWidth={2} dot={false} name="Rental Mortgage"/>
+            {/* Ratios as dashed lines */}
+            <Line yAxisId="pct" type="monotone" dataKey="expenseToIncome" stroke="#f472b6" strokeWidth={2} strokeDasharray="6 3" dot={false} name="Expense/Income %"/>
+            <Line yAxisId="pct" type="monotone" dataKey="liabToAsset" stroke="#22d3ee" strokeWidth={2} strokeDasharray="6 3" dot={false} name="Liabilities/Assets %"/>
+            <Line yAxisId="pct" type="monotone" dataKey="savingsRate" stroke="#4ade80" strokeWidth={2} strokeDasharray="6 3" dot={false} name="Savings Rate %"/>
           </ComposedChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Financial Ratios Chart - Split Pre/Post Retirement */}
-      <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "14px", border: "1px solid rgba(148,163,184,0.1)" }}>
-        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#14b8a6" }}>📊 Financial Ratios — Pre-Retirement</h3>
-        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
-          <span style={{ color: "#f472b6" }}>■</span> Expense/Income &nbsp;
-          <span style={{ color: "#22d3ee" }}>■</span> Liabilities/Assets &nbsp;
-          <span style={{ color: "#a78bfa" }}>■</span> Savings Rate
+        <div style={{ fontSize: "11px", color: "#64748b", marginTop: "6px", textAlign: "center", fontStyle: "italic" }}>
+          Ratio values clamped to ±300% for readability. Dashed lines = ratios (%).
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <ComposedChart data={enriched.filter((_, i) => i <= retireYearIdx).map(r => ({ 
-            year: r.year, 
-            expenseToIncome: r.expenseToIncome || 0,
-            liabToAsset: r.liabToAsset || 0,
-            savingsRate: r.savingsRate || 0
-          }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155"/>
-            <XAxis dataKey="year" stroke="#64748b" fontSize={11}/>
-            <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => v.toFixed(0) + '%'} domain={[0, 'dataMax + 10']}/>
-            <Tooltip 
-              contentStyle={{ background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", fontSize: "13px" }} 
-              formatter={(v) => v.toFixed(1) + '%'}
-            />
-            <Legend wrapperStyle={{ fontSize: "13px" }}/>
-            <ReferenceLine y={100} stroke="#ef4444" strokeDasharray="3 3" label={{ value: '100%', fill: '#ef4444', fontSize: 10 }} />
-            <Line type="monotone" dataKey="expenseToIncome" stroke="#f472b6" strokeWidth={2} dot={false} name="Expense/Income %"/>
-            <Line type="monotone" dataKey="liabToAsset" stroke="#22d3ee" strokeWidth={2} dot={false} name="Liabilities/Assets %"/>
-            <Line type="monotone" dataKey="savingsRate" stroke="#a78bfa" strokeWidth={2} dot={false} name="Savings Rate %"/>
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "14px", border: "1px solid rgba(148,163,184,0.1)" }}>
-        <h3 style={{ fontSize: "18px", marginBottom: "12px", color: "#fb923c" }}>📊 Financial Ratios — Post-Retirement</h3>
-        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
-          <span style={{ color: "#f472b6" }}>■</span> Expense/Income &nbsp;
-          <span style={{ color: "#22d3ee" }}>■</span> Liabilities/Assets &nbsp;
-          <span style={{ color: "#a78bfa" }}>■</span> Savings Rate
-        </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <ComposedChart data={enriched.filter((_, i) => i >= retireYearIdx).map(r => ({ 
-            year: r.year, 
-            expenseToIncome: Math.min(r.expenseToIncome || 0, 500),
-            liabToAsset: Math.min(r.liabToAsset || 0, 500),
-            savingsRate: Math.max(r.savingsRate || 0, -500)
-          }))}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155"/>
-            <XAxis dataKey="year" stroke="#64748b" fontSize={11}/>
-            <YAxis stroke="#64748b" fontSize={11} tickFormatter={(v) => v.toFixed(0) + '%'}/>
-            <Tooltip 
-              contentStyle={{ background: "#1e293b", border: "1px solid #475569", borderRadius: "4px", fontSize: "13px" }} 
-              formatter={(v) => v.toFixed(1) + '%'}
-            />
-            <Legend wrapperStyle={{ fontSize: "13px" }}/>
-            <ReferenceLine y={100} stroke="#ef4444" strokeDasharray="3 3" label={{ value: '100%', fill: '#ef4444', fontSize: 10 }} />
-            <Line type="monotone" dataKey="expenseToIncome" stroke="#f472b6" strokeWidth={2} dot={false} name="Expense/Income %"/>
-            <Line type="monotone" dataKey="liabToAsset" stroke="#22d3ee" strokeWidth={2} dot={false} name="Liabilities/Assets %"/>
-            <Line type="monotone" dataKey="savingsRate" stroke="#a78bfa" strokeWidth={2} dot={false} name="Savings Rate %"/>
-          </ComposedChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );

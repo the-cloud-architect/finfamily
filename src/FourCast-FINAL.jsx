@@ -800,11 +800,16 @@ export default function FourCast() {
           .tab-btn { position: relative; overflow: hidden; }
           .tab-btn::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.4s ease, height 0.4s ease; }
           .tab-btn:hover::after { width: 200px; height: 200px; }
+          @keyframes iconBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+          @keyframes iconSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          .tab-icon-active { display: inline-block; animation: iconBounce 1s ease-in-out infinite; }
+          .tab-icon-inactive { display: inline-block; transition: transform 0.3s ease; }
+          .tab-btn:hover .tab-icon-inactive { transform: scale(1.2); }
         `}</style>
         {[
-          ["variables", "⚙️ Forecast"],
-          ["charts", "📈 Charts"],
-        ].map(([k, v]) => (
+          ["variables", "Forecast", "⚙️"],
+          ["charts", "Charts", "📊"],
+        ].map(([k, label, icon]) => (
           <button
             key={k}
             className="tab-btn"
@@ -824,11 +829,15 @@ export default function FourCast() {
               transform: tab === k ? "scale(1.02)" : "scale(1)",
               animation: tab === k ? "tabGlow 2s ease-in-out infinite" : "none",
               boxShadow: tab === k ? "0 4px 16px rgba(99, 102, 241, 0.35)" : "none",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
             onMouseEnter={e => { if (tab !== k) { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; e.currentTarget.style.color = '#c4b5fd'; e.currentTarget.style.transform = 'scale(1.03)'; } }}
             onMouseLeave={e => { if (tab !== k) { e.currentTarget.style.borderColor = 'rgba(148,163,184,0.2)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.transform = 'scale(1)'; } }}
           >
-            {v}
+            <span className={tab === k ? "tab-icon-active" : "tab-icon-inactive"} style={{ fontSize: "18px" }}>{icon}</span>
+            {label}
           </button>
         ))}
       </div>
@@ -915,7 +924,40 @@ export default function FourCast() {
                   </tr>
                 </thead>
                 <tbody>
-                  <VariablesTablePart2Sections {...tableProps} />
+                  <VariablesTablePart2Sections {...tableProps} sectionGroup="upper" />
+                </tbody>
+              </table>
+            </ScrollTable>
+          </div>
+
+          {/* Second scroll section starting at Housing */}
+          <div style={{ background: "rgba(30,41,59,0.6)", borderRadius: "10px", padding: "12px", border: "1px solid rgba(148,163,184,0.1)" }}>
+            <ScrollTable>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+                <thead>
+                  <tr>
+                    <th style={stickyTh}>Category</th>
+                    {enriched.map((r, i) => (
+                      <th
+                        key={r.year}
+                        style={{
+                          ...thStyle,
+                          background: isRet(r.year)
+                            ? "rgba(251,146,60,0.15)"
+                            : i % 5 === 0
+                              ? "rgba(99,102,241,0.1)"
+                              : "transparent",
+                        }}
+                      >
+                        {r.year}
+                        <br />
+                        {ageHeader(r)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <VariablesTablePart2Sections {...tableProps} sectionGroup="lower" />
                 </tbody>
               </table>
             </ScrollTable>
