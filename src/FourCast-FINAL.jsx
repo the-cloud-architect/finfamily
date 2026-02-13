@@ -1026,23 +1026,6 @@ export default function FourCast() {
                   </tbody>
                 </table>
 
-                {/* Mid-table scrollbar indicator */}
-                <div style={{ 
-                  position: "sticky", 
-                  left: 0, 
-                  padding: "6px 0", 
-                  background: "linear-gradient(90deg, rgba(99,102,241,0.15), transparent 50%, rgba(99,102,241,0.15))",
-                  borderTop: "1px solid rgba(99,102,241,0.3)",
-                  borderBottom: "1px solid rgba(99,102,241,0.3)",
-                  textAlign: "center",
-                  color: "#6366f1",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  letterSpacing: "1px"
-                }}>
-                  ◆ HOUSING & BELOW ◆
-                </div>
-
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
                   <thead>
                     <tr>

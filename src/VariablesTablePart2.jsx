@@ -618,23 +618,29 @@ export const VariablesTablePart2Sections = ({
           ))}
         </tr>
         <tr>
-          <td style={{ ...stickyTd, color: "#a78bfa" }}>Debt/Income %</td>
-          {enriched.map((r, i) => {
-            const debtToIncome = r.gross > 0 ? (r.debt / r.gross) * 100 : 0;
-            return (
-              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-                <RatioCell value={debtToIncome} thresholds={{ higherIsBad: true, danger: 40, warn: 30 }} />
-              </td>
-            );
-          })}
-        </tr>
-        <tr>
           <td style={{ ...stickyTd, color: "#60a5fa" }}>Assets/Liabilities</td>
           {enriched.map((r, i) => {
-            const assetToLiab = r.debt > 0 ? (r.assets / r.debt) * 100 : (r.assets > 0 ? 999 : 100);
+            const assetToLiab = r.debt > 0 ? (r.assets / r.debt) : (r.assets > 0 ? 999 : 0);
+            let color = COLORS.success;
+            if (assetToLiab < 1) color = COLORS.danger;
+            else if (assetToLiab < 2) color = COLORS.warning;
             return (
               <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-                <RatioCell value={assetToLiab} thresholds={{ higherIsBad: false, danger: 100, warn: 200 }} />
+                <span style={{
+                  padding: "2px 4px",
+                  borderRadius: "3px",
+                  fontSize: "11px",
+                  fontFamily: "inherit",
+                  background: `${color}20`,
+                  border: `1px solid ${color}50`,
+                  display: "inline-block",
+                  minWidth: "50px",
+                  textAlign: "center",
+                  color: color,
+                  fontWeight: "600"
+                }}>
+                  {assetToLiab >= 999 ? "∞" : assetToLiab.toFixed(1) + "x"}
+                </span>
               </td>
             );
           })}

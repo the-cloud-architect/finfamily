@@ -22,8 +22,8 @@ export const initData = (age = 45, spouseAge = 43, depAges = [10, 8, 5], retireA
   
   for (let i = 0; i < YEARS; i++) {
     const yr = START_YEAR + i;
-    // Retirement starts the year AFTER retireAge — you work through retireAge year
-    const isRetired = (age + i) > retireAge;
+    // Retirement starts AT retireAge — the retireAge year is the first retirement year
+    const isRetired = (age + i) >= retireAge;
     const incomeMultiplier = isRetired ? 1 : Math.pow(1.1, Math.floor(i / 5));
     const carPurchase = (yr >= 2028 && (yr - 2028) % 5 === 0) ? 20000 : 0;
     
@@ -74,7 +74,7 @@ export const calcCumulative = (data, retireAge) => {
 
   for (let i = 0; i < data.length; i++) {
     const r = data[i];
-    const isRetired = (r.age > retireAge);
+    const isRetired = (r.age >= retireAge);
     
     let depCost = 0;
     for (let d = 1; d <= r.dependents; d++) {

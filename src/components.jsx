@@ -139,7 +139,7 @@ export const ScrollTable = ({ children }) => {
 export const AccordionSection = ({ title, icon, color, isOpen, onToggle, children }) => (
   <>
     <tr onClick={onToggle} style={{ cursor: "pointer" }}>
-      <td colSpan={42} style={{ 
+      <td style={{ 
         background: `linear-gradient(90deg, ${color}20, ${color}10)`, 
         padding: "6px 10px", 
         fontWeight: "bold", 
@@ -148,12 +148,16 @@ export const AccordionSection = ({ title, icon, color, isOpen, onToggle, childre
         position: "sticky",
         left: 0,
         zIndex: 10,
-        minWidth: "max-content",
         whiteSpace: "nowrap",
+        minWidth: "144px",
       }}>
         <span style={{ marginRight: "8px", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "0.2s" }}>▶</span>
         {icon} {title}
       </td>
+      <td colSpan={41} style={{ 
+        background: `linear-gradient(90deg, ${color}20, transparent)`, 
+        padding: 0,
+      }}></td>
     </tr>
     {isOpen && children}
   </>
