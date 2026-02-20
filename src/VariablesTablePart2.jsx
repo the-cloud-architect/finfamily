@@ -428,7 +428,7 @@ export const VariablesTablePart2Sections = ({
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
               {i === 0 ? (
-                <Cell value={data[0].mortgageBalance} onChange={v => updateMortgage("mortgageBalance", v)} isYear0={true} isExpense={true} />
+                <Cell value={data[0].mortgageBalance} onChange={v => updateMortgage(0, v, data[0].mortgageRate, data[0].mortgageYears)} isYear0={true} isExpense={true} />
               ) : (
                 <span style={{color: r.mortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.mortgageBalEnd)}</span>
               )}
@@ -438,8 +438,8 @@ export const VariablesTablePart2Sections = ({
         <tr>
           <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
           <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].mortgageRate} onChange={v => updateMortgage("mortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].mortgageYears} onChange={v => updateMortgage("mortgageYears", v)} num isYear0={true} />
+            <Cell value={data[0].mortgageRate} onChange={v => updateMortgage(0, data[0].mortgageBalance, v, data[0].mortgageYears)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].mortgageYears} onChange={v => updateMortgage(0, data[0].mortgageBalance, data[0].mortgageRate, v)} num isYear0={true} />
           </td>
           {enriched.slice(1).map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
@@ -450,7 +450,7 @@ export const VariablesTablePart2Sections = ({
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
               {i === 0 ? (
-                <Cell value={data[0].rentalMortgageBalance} onChange={v => updateRentalMortgage("rentalMortgageBalance", v)} isYear0={true} isExpense={true} />
+                <Cell value={data[0].rentalMortgageBalance} onChange={v => updateRentalMortgage(0, v, data[0].rentalMortgageRate, data[0].rentalMortgageYears)} isYear0={true} isExpense={true} />
               ) : (
                 <span style={{color: r.rentalMortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.rentalMortgageBalEnd)}</span>
               )}
@@ -460,8 +460,8 @@ export const VariablesTablePart2Sections = ({
         <tr>
           <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
           <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].rentalMortgageRate} onChange={v => updateRentalMortgage("rentalMortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].rentalMortgageYears} onChange={v => updateRentalMortgage("rentalMortgageYears", v)} num isYear0={true} />
+            <Cell value={data[0].rentalMortgageRate} onChange={v => updateRentalMortgage(0, data[0].rentalMortgageBalance, v, data[0].rentalMortgageYears)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].rentalMortgageYears} onChange={v => updateRentalMortgage(0, data[0].rentalMortgageBalance, data[0].rentalMortgageRate, v)} num isYear0={true} />
           </td>
           {enriched.slice(1).map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
@@ -472,7 +472,7 @@ export const VariablesTablePart2Sections = ({
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
               {i === 0 ? (
-                <Cell value={data[0].carLoanBalance} onChange={v => updateCarLoan("carLoanBalance", v)} isYear0={true} isExpense={true} />
+                <Cell value={data[0].carLoanBalance} onChange={v => updateCarLoan(0, v, data[0].carLoanRate, data[0].carLoanYears)} isYear0={true} isExpense={true} />
               ) : (
                 <span style={{color: r.carLoanBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.carLoanBalEnd)}</span>
               )}
@@ -482,8 +482,8 @@ export const VariablesTablePart2Sections = ({
         <tr>
           <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
           <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].carLoanRate} onChange={v => updateCarLoan("carLoanRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].carLoanYears} onChange={v => updateCarLoan("carLoanYears", v)} num isYear0={true} />
+            <Cell value={data[0].carLoanRate} onChange={v => updateCarLoan(0, data[0].carLoanBalance, v, data[0].carLoanYears)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].carLoanYears} onChange={v => updateCarLoan(0, data[0].carLoanBalance, data[0].carLoanRate, v)} num isYear0={true} />
           </td>
           {enriched.slice(1).map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
