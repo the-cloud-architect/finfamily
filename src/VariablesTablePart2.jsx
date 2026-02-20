@@ -25,15 +25,101 @@ export const VariablesTablePart2Sections = ({
   depAges,
   sectionGroup
 }) => {
-  // sectionGroup: 'upper' = Income, Dependents, Liabilities
-  //               'lower' = Housing, Expenses, Cash Flow, Assets, Purchases, Summary, Ratios
-  //               undefined/null = all (backwards compat)
-  const showUpper = !sectionGroup || sectionGroup === 'upper';
-  const showLower = !sectionGroup || sectionGroup === 'lower';
   return (
     <>
-      {showUpper && (<>
-      {/* INCOME SECTION */}
+      {/* 1. FINANCIAL RATIOS SECTION */}
+      <AccordionSection title="FINANCIAL RATIOS" icon="📐" color={COLORS.sections.ratios} isOpen={sections.ratios} onToggle={() => toggleSection('ratios')}>
+        <tr>
+          <td style={{ ...stickyTd, color: "#f472b6" }}>Expense/Income %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.expenseToIncome || 0} thresholds={{ higherIsBad: true, danger: 90, warn: 70 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#22d3ee" }}>Expense/After-Tax %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.expenseToAfterTax || 0} thresholds={{ higherIsBad: true, danger: 100, warn: 80 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#fb923c" }}>Liabilities/Assets %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.liabToAsset || 0} thresholds={{ higherIsBad: true, danger: 50, warn: 30 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#4ade80" }}>Savings Rate %</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <RatioCell value={r.savingsRate || 0} thresholds={{ higherIsBad: false, danger: 10, warn: 20 }} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa" }}>Assets/Liabilities</td>
+          {enriched.map((r, i) => {
+            const assetToLiab = r.debt > 0 ? (r.assets / r.debt) : (r.assets > 0 ? 999 : 0);
+            let color = COLORS.success;
+            if (assetToLiab < 1) color = COLORS.danger;
+            else if (assetToLiab < 2) color = COLORS.warning;
+            return (
+              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                <span style={{
+                  padding: "2px 4px",
+                  borderRadius: "3px",
+                  fontSize: "11px",
+                  fontFamily: "inherit",
+                  background: `${color}20`,
+                  border: `1px solid ${color}50`,
+                  display: "inline-block",
+                  minWidth: "50px",
+                  textAlign: "center",
+                  color: color,
+                  fontWeight: "600"
+                }}>
+                  {assetToLiab >= 999 ? "∞" : assetToLiab.toFixed(1) + "x"}
+                </span>
+              </td>
+            );
+          })}
+        </tr>
+      </AccordionSection>
+
+      {/* 2. SUMMARY SECTION (merged Cash Flow + Summary) */}
+      <AccordionSection title="SUMMARY" icon="💎" color={COLORS.sections.summary} isOpen={sections.summary || sections.cashflow} onToggle={() => { toggleSection('summary'); if (sections.cashflow !== sections.summary) toggleSection('cashflow'); }}>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold" }}>Net Cash Flow</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: r.cashFlow >= 0 ? COLORS.income : COLORS.expense, background: bg(r.year, i) }}>
+              {fmt(r.cashFlow)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.summary }}>Net Worth</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.summary, background: "rgba(167,139,250,0.1)" }}>
+              {fmt(r.netWorth)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#06b6d4" }}>Cash Reserve</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#06b6d4", background: bg(r.year, i) }}>
+              {fmt(r.cashRes)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
+
+      {/* 3. INCOME SECTION */}
       <AccordionSection title="INCOME" icon="💰" color={COLORS.sections.income} isOpen={sections.income} onToggle={() => toggleSection('income')}>
         {[["cashIncome", "Cash"], ["rsuIncome", "RSU"], ["match401k", "401k Match"], ["investmentIncome", "Investment Income"], ["rentalIncome", "Rental Income"]].map(([k, l]) => (
           <tr key={k}>
@@ -71,361 +157,7 @@ export const VariablesTablePart2Sections = ({
         </tr>
       </AccordionSection>
 
-      {/* DEPENDENTS SECTION */}
-      <AccordionSection title="DEPENDENTS" icon="👨‍👩‍👧‍👦" color={COLORS.sections.dependents} isOpen={sections.dependents} onToggle={() => toggleSection('dependents')}>
-        <tr>
-          <td style={stickyTd}># Dependents</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[i].dependents} onChange={v => updateDeps(v)} num isYear0={true} />
-              ) : (
-                <span>{r.dependents}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        {depAges.map((_, idx) => (
-          <tr key={`dep${idx}`}>
-            <td style={stickyTd}>Kid {idx+1} Age</td>
-            {enriched.map((r, i) => {
-              const a = r[`dep${idx+1}Age`];
-              return (
-                <td key={r.year} style={{ ...cellStyle, color: a && a < 18 ? "#ec4899" : "#e2e8f0", background: bg(r.year, i) }}>
-                  {a || '-'}
-                </td>
-              );
-            })}
-          </tr>
-        ))}
-        <tr>
-          <td style={{ ...stickyTd, color: COLORS.sections.dependents }}>Dep Cost</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: COLORS.sections.dependents, background: bg(r.year, i) }}>
-              {fmt(r.depCost)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* CASH FLOW SECTION */}
-      <AccordionSection title="CASH FLOW" icon="💵" color={COLORS.sections.cashflow} isOpen={sections.cashflow} onToggle={() => toggleSection('cashflow')}>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold" }}>Net Cash Flow</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: r.cashFlow >= 0 ? COLORS.income : COLORS.expense, background: bg(r.year, i) }}>
-              {fmt(r.cashFlow)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* SUMMARY SECTION */}
-      <AccordionSection title="SUMMARY" icon="💎" color={COLORS.sections.summary} isOpen={sections.summary} onToggle={() => toggleSection('summary')}>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.summary }}>Net Worth</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.summary, background: "rgba(167,139,250,0.1)" }}>
-              {fmt(r.netWorth)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#06b6d4" }}>Cash Reserve</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#06b6d4", background: bg(r.year, i) }}>
-              {fmt(r.cashRes)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* LIABILITIES SECTION */}
-      <AccordionSection title="LIABILITIES" icon="📉" color={COLORS.sections.liabilities} isOpen={sections.liabilities} onToggle={() => toggleSection('liabilities')}>
-        <tr>
-          <td style={{...stickyTd, color: COLORS.expense}}>Primary Mtg Bal</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].mortgageBalance} onChange={v => updateMortgage("mortgageBalance", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span style={{color: r.mortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.mortgageBalEnd)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].mortgageRate} onChange={v => updateMortgage("mortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].mortgageYears} onChange={v => updateMortgage("mortgageYears", v)} num isYear0={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: COLORS.expense}}>Rental Mtg Bal</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].rentalMortgageBalance} onChange={v => updateRentalMortgage("rentalMortgageBalance", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span style={{color: r.rentalMortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.rentalMortgageBalEnd)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].rentalMortgageRate} onChange={v => updateRentalMortgage("rentalMortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].rentalMortgageYears} onChange={v => updateRentalMortgage("rentalMortgageYears", v)} num isYear0={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: COLORS.expense}}>Car Loan Bal</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].carLoanBalance} onChange={v => updateCarLoan("carLoanBalance", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span style={{color: r.carLoanBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.carLoanBalEnd)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].carLoanRate} onChange={v => updateCarLoan("carLoanRate", v)} pct isYear0={true} isExpense={true} />{' '}
-            <Cell value={data[0].carLoanYears} onChange={v => updateCarLoan("carLoanYears", v)} num isYear0={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: COLORS.expense}}>Other Debt</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <Cell value={data[i].otherDebt} onChange={v => updateCascadeAll(i, "otherDebt", v)} isYear0={i === 0} isExpense={true} />
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: COLORS.expense}}>HELOC Used</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <Cell value={data[i].helocUsed} onChange={v => updateHelocUsed(i, v)} isYear0={i === 0} isExpense={true} />
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate %</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].helocRate} onChange={v => updateYear0("helocRate", v)} pct isYear0={true} isExpense={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.expense }}>Total Liabilities</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.expense, background: bg(r.year, i) }}>
-              {fmt(r.debt)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-      </>)}
-
-      {showLower && (<>
-      {/* HOUSING COSTS SECTION */}
-      <AccordionSection title="HOUSING COSTS" icon="🏠" color={COLORS.sections.housing} isOpen={sections.housing} onToggle={() => toggleSection('housing')}>
-        <tr>
-          <td style={{ ...stickyTd, color: "#60a5fa" }}>Primary Mtg Pmt</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
-              {fmt(r.effectiveMtgPayment)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
-              {fmt(r.mortgageInterest)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
-              {fmt(r.mortgagePrincipal)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={stickyTd}>Home Taxes</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].homeTaxes} onChange={v => updateYear0("homeTaxes", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span style={{color:"#60a5fa"}}>{fmt(r.homeTaxes)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#60a5fa" }}>Rental Mtg Pmt</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
-              {fmt(r.effectiveRentalPayment)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
-              {fmt(r.rentalInterest)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
-              {fmt(r.rentalPrincipal)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={stickyTd}>Rental Taxes</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].rentalTaxes} onChange={v => updateYear0("rentalTaxes", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span style={{color:"#60a5fa"}}>{fmt(r.rentalTaxes)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={stickyTd}>HOA</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[0].hoaFees} onChange={v => updateYear0("hoaFees", v)} isYear0={true} isExpense={true} />
-              ) : (
-                <span>{fmt(data[0].hoaFees)}</span>
-              )}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#f87171" }}>HELOC Interest</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: r.helocInterest > 0 ? "#f87171" : "#64748b", background: bg(r.year, i) }}>
-              {fmt(r.helocInterest)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.housing }}>Total Housing</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.housing, background: bg(r.year, i) }}>
-              {fmt(r.housingCost)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* OTHER EXPENSES SECTION */}
-      <AccordionSection title={`OTHER EXPENSES (${data[0].expenseInflationRate}% inflation)`} icon="💸" color={COLORS.sections.expenses} isOpen={sections.expenses} onToggle={() => toggleSection('expenses')}>
-        <tr>
-          <td style={stickyTd}>Inflation %</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].expenseInflationRate} onChange={v => updateYear0("expenseInflationRate", v)} pct isYear0={true} isExpense={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#64748b", background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        {[
-          ["utilitiesExpense", "Utilities"], 
-          ["foodExpense", "Food"], 
-          ["clothingExpense", "Clothing"], 
-          ["entertainmentExpense", "Entertainment"], 
-          ["vacationBudget", "Vacation"], 
-          ["educationExpense", "Education"], 
-          ["healthcareExpense", "Healthcare"], 
-          ["healthInsurance", "Health Ins"], 
-          ["carInsurance", "Car Ins"], 
-          ["homeInsurance", "Home Ins"], 
-          ["transportExpense", "Transport"], 
-          ["miscExpense", "Misc"]
-        ].map(([k, l]) => (
-          <tr key={k}>
-            <td style={stickyTd}>{l}</td>
-            <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-              {k === 'vacationBudget' ? (
-                <Cell value={data[0][k]} onChange={v => update(0, k, v)} isYear0={true} isExpense={true} />
-              ) : (
-                <Cell value={data[0][k]} onChange={v => updateYear0(k, v)} isYear0={true} isExpense={true} />
-              )}
-            </td>
-            {enriched.slice(1).map((r, i) => (
-              <td key={r.year} style={{ ...cellStyle, color: "#64748b", background: bg(r.year, i+1) }}>
-                {k === 'vacationBudget' ? fmt(r.vacationBudget) : fmt(data[0][k] * Math.pow(1 + data[0].expenseInflationRate / 100, i+1))}
-              </td>
-            ))}
-          </tr>
-        ))}
-        <tr>
-          <td style={stickyTd}>Car Maint %</td>
-          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
-            <Cell value={data[0].carMaintenanceRate} onChange={v => updateYear0("carMaintenanceRate", v)} pct isYear0={true} isExpense={true} />
-          </td>
-          {enriched.slice(1).map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#8b5cf6" }}>Car Maintenance</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: "#8b5cf6", background: bg(r.year, i) }}>
-              {fmt(r.carMaint)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, color: "#60a5fa" }}>Car Loan Pmt</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, color: r.carLoanPaymentEffective > 0 ? "#60a5fa" : "#64748b", background: bg(r.year, i) }}>
-              {fmt(r.carLoanPaymentEffective)}
-            </td>
-          ))}
-        </tr>
-        <tr>
-          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.expenses }}>Total Expenses</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.expenses, background: bg(r.year, i) }}>
-              {fmt(r.exp)}
-            </td>
-          ))}
-        </tr>
-      </AccordionSection>
-
-      {/* ASSETS SECTION */}
+      {/* 4. ASSETS SECTION */}
       <AccordionSection title="ASSETS" icon="🏦" color={COLORS.sections.assets} isOpen={sections.assets} onToggle={() => toggleSection('assets')}>
         <tr>
           <td style={stickyTd}>Cash</td>
@@ -565,7 +297,111 @@ export const VariablesTablePart2Sections = ({
         </tr>
       </AccordionSection>
 
-      {/* MAJOR PURCHASES SECTION */}
+      {/* 5. HOUSING COSTS SECTION */}
+      <AccordionSection title="HOUSING COSTS" icon="🏠" color={COLORS.sections.housing} isOpen={sections.housing} onToggle={() => toggleSection('housing')}>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa" }}>Primary Mtg Pmt</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
+              {fmt(r.effectiveMtgPayment)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
+              {fmt(r.mortgageInterest)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
+              {fmt(r.mortgagePrincipal)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={stickyTd}>Home Taxes</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              {i === 0 ? (
+                <Cell value={data[0].homeTaxes} onChange={v => updateYear0("homeTaxes", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span style={{color:"#60a5fa"}}>{fmt(r.homeTaxes)}</span>
+              )}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa" }}>Rental Mtg Pmt</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
+              {fmt(r.effectiveRentalPayment)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
+              {fmt(r.rentalInterest)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
+              {fmt(r.rentalPrincipal)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={stickyTd}>Rental Taxes</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              {i === 0 ? (
+                <Cell value={data[0].rentalTaxes} onChange={v => updateYear0("rentalTaxes", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span style={{color:"#60a5fa"}}>{fmt(r.rentalTaxes)}</span>
+              )}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={stickyTd}>HOA</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              {i === 0 ? (
+                <Cell value={data[0].hoaFees} onChange={v => updateYear0("hoaFees", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span>{fmt(data[0].hoaFees)}</span>
+              )}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#f87171" }}>HELOC Interest</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: r.helocInterest > 0 ? "#f87171" : "#64748b", background: bg(r.year, i) }}>
+              {fmt(r.helocInterest)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.housing }}>Total Housing</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.housing, background: bg(r.year, i) }}>
+              {fmt(r.housingCost)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
+
+      {/* 6. MAJOR PURCHASES SECTION */}
       <AccordionSection title="MAJOR PURCHASES" icon="🛒" color={COLORS.sections.purchases} isOpen={sections.purchases} onToggle={() => toggleSection('purchases')}>
         <tr>
           <td style={stickyTd}>Major Purchase</td>
@@ -585,70 +421,221 @@ export const VariablesTablePart2Sections = ({
         </tr>
       </AccordionSection>
 
-      {/* NEW: FINANCIAL RATIOS SECTION */}
-      <AccordionSection title="FINANCIAL RATIOS" icon="📐" color={COLORS.sections.ratios} isOpen={sections.ratios} onToggle={() => toggleSection('ratios')}>
+      {/* 7. LIABILITIES SECTION */}
+      <AccordionSection title="LIABILITIES" icon="📉" color={COLORS.sections.liabilities} isOpen={sections.liabilities} onToggle={() => toggleSection('liabilities')}>
         <tr>
-          <td style={{ ...stickyTd, color: "#f472b6" }}>Expense/Income %</td>
+          <td style={{...stickyTd, color: COLORS.expense}}>Primary Mtg Bal</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <RatioCell value={r.expenseToIncome || 0} thresholds={{ higherIsBad: true, danger: 90, warn: 70 }} />
+              {i === 0 ? (
+                <Cell value={data[0].mortgageBalance} onChange={v => updateMortgage("mortgageBalance", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span style={{color: r.mortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.mortgageBalEnd)}</span>
+              )}
             </td>
           ))}
         </tr>
         <tr>
-          <td style={{ ...stickyTd, color: "#22d3ee" }}>Expense/After-Tax %</td>
+          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].mortgageRate} onChange={v => updateMortgage("mortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].mortgageYears} onChange={v => updateMortgage("mortgageYears", v)} num isYear0={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{...stickyTd, color: COLORS.expense}}>Rental Mtg Bal</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <RatioCell value={r.expenseToAfterTax || 0} thresholds={{ higherIsBad: true, danger: 100, warn: 80 }} />
+              {i === 0 ? (
+                <Cell value={data[0].rentalMortgageBalance} onChange={v => updateRentalMortgage("rentalMortgageBalance", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span style={{color: r.rentalMortgageBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.rentalMortgageBalEnd)}</span>
+              )}
             </td>
           ))}
         </tr>
         <tr>
-          <td style={{ ...stickyTd, color: "#fb923c" }}>Liabilities/Assets %</td>
+          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].rentalMortgageRate} onChange={v => updateRentalMortgage("rentalMortgageRate", v)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].rentalMortgageYears} onChange={v => updateRentalMortgage("rentalMortgageYears", v)} num isYear0={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{...stickyTd, color: COLORS.expense}}>Car Loan Bal</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <RatioCell value={r.liabToAsset || 0} thresholds={{ higherIsBad: true, danger: 50, warn: 30 }} />
+              {i === 0 ? (
+                <Cell value={data[0].carLoanBalance} onChange={v => updateCarLoan("carLoanBalance", v)} isYear0={true} isExpense={true} />
+              ) : (
+                <span style={{color: r.carLoanBalEnd > 0 ? COLORS.expense : COLORS.income}}>{fmt(r.carLoanBalEnd)}</span>
+              )}
             </td>
           ))}
         </tr>
         <tr>
-          <td style={{ ...stickyTd, color: "#4ade80" }}>Savings Rate %</td>
+          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate%/Yrs</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].carLoanRate} onChange={v => updateCarLoan("carLoanRate", v)} pct isYear0={true} isExpense={true} />{' '}
+            <Cell value={data[0].carLoanYears} onChange={v => updateCarLoan("carLoanYears", v)} num isYear0={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{...stickyTd, color: COLORS.expense}}>Other Debt</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <RatioCell value={r.savingsRate || 0} thresholds={{ higherIsBad: false, danger: 10, warn: 20 }} />
+              <Cell value={data[i].otherDebt} onChange={v => updateCascadeAll(i, "otherDebt", v)} isYear0={i === 0} isExpense={true} />
             </td>
           ))}
         </tr>
         <tr>
-          <td style={{ ...stickyTd, color: "#60a5fa" }}>Assets/Liabilities</td>
-          {enriched.map((r, i) => {
-            const assetToLiab = r.debt > 0 ? (r.assets / r.debt) : (r.assets > 0 ? 999 : 0);
-            let color = COLORS.success;
-            if (assetToLiab < 1) color = COLORS.danger;
-            else if (assetToLiab < 2) color = COLORS.warning;
-            return (
-              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-                <span style={{
-                  padding: "2px 4px",
-                  borderRadius: "3px",
-                  fontSize: "11px",
-                  fontFamily: "inherit",
-                  background: `${color}20`,
-                  border: `1px solid ${color}50`,
-                  display: "inline-block",
-                  minWidth: "50px",
-                  textAlign: "center",
-                  color: color,
-                  fontWeight: "600"
-                }}>
-                  {assetToLiab >= 999 ? "∞" : assetToLiab.toFixed(1) + "x"}
-                </span>
-              </td>
-            );
-          })}
+          <td style={{...stickyTd, color: COLORS.expense}}>HELOC Used</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              <Cell value={data[i].helocUsed} onChange={v => updateHelocUsed(i, v)} isYear0={i === 0} isExpense={true} />
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{...stickyTd, color: "#94a3b8"}}>↳ Rate %</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].helocRate} onChange={v => updateYear0("helocRate", v)} pct isYear0={true} isExpense={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.expense }}>Total Liabilities</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.expense, background: bg(r.year, i) }}>
+              {fmt(r.debt)}
+            </td>
+          ))}
         </tr>
       </AccordionSection>
-      </>)}
+
+      {/* 8. OTHER EXPENSES SECTION */}
+      <AccordionSection title={`OTHER EXPENSES (${data[0].expenseInflationRate}% inflation)`} icon="💸" color={COLORS.sections.expenses} isOpen={sections.expenses} onToggle={() => toggleSection('expenses')}>
+        <tr>
+          <td style={stickyTd}>Inflation %</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].expenseInflationRate} onChange={v => updateYear0("expenseInflationRate", v)} pct isYear0={true} isExpense={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#64748b", background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        {[
+          ["utilitiesExpense", "Utilities"], 
+          ["foodExpense", "Food"], 
+          ["clothingExpense", "Clothing"], 
+          ["entertainmentExpense", "Entertainment"], 
+          ["vacationBudget", "Vacation"], 
+          ["educationExpense", "Education"], 
+          ["healthcareExpense", "Healthcare"], 
+          ["healthInsurance", "Health Ins"], 
+          ["carInsurance", "Car Ins"], 
+          ["homeInsurance", "Home Ins"], 
+          ["transportExpense", "Transport"], 
+          ["miscExpense", "Misc"]
+        ].map(([k, l]) => (
+          <tr key={k}>
+            <td style={stickyTd}>{l}</td>
+            <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+              {k === 'vacationBudget' ? (
+                <Cell value={data[0][k]} onChange={v => update(0, k, v)} isYear0={true} isExpense={true} />
+              ) : (
+                <Cell value={data[0][k]} onChange={v => updateYear0(k, v)} isYear0={true} isExpense={true} />
+              )}
+            </td>
+            {enriched.slice(1).map((r, i) => (
+              <td key={r.year} style={{ ...cellStyle, color: "#64748b", background: bg(r.year, i+1) }}>
+                {k === 'vacationBudget' ? fmt(r.vacationBudget) : fmt(data[0][k] * Math.pow(1 + data[0].expenseInflationRate / 100, i+1))}
+              </td>
+            ))}
+          </tr>
+        ))}
+        <tr>
+          <td style={stickyTd}>Car Maint %</td>
+          <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
+            <Cell value={data[0].carMaintenanceRate} onChange={v => updateYear0("carMaintenanceRate", v)} pct isYear0={true} isExpense={true} />
+          </td>
+          {enriched.slice(1).map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#8b5cf6" }}>Car Maintenance</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#8b5cf6", background: bg(r.year, i) }}>
+              {fmt(r.carMaint)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa" }}>Car Loan Pmt</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: r.carLoanPaymentEffective > 0 ? "#60a5fa" : "#64748b", background: bg(r.year, i) }}>
+              {fmt(r.carLoanPaymentEffective)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.expenses }}>Total Expenses</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.expenses, background: bg(r.year, i) }}>
+              {fmt(r.exp)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
+
+      {/* 9. DEPENDENTS SECTION (bottom) */}
+      <AccordionSection title="DEPENDENTS" icon="👨‍👩‍👧‍👦" color={COLORS.sections.dependents} isOpen={sections.dependents} onToggle={() => toggleSection('dependents')}>
+        <tr>
+          <td style={stickyTd}># Dependents</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+              {i === 0 ? (
+                <Cell value={data[i].dependents} onChange={v => updateDeps(v)} num isYear0={true} />
+              ) : (
+                <span>{r.dependents}</span>
+              )}
+            </td>
+          ))}
+        </tr>
+        {depAges.map((_, idx) => (
+          <tr key={`dep${idx}`}>
+            <td style={stickyTd}>Kid {idx+1} Age</td>
+            {enriched.map((r, i) => {
+              const a = r[`dep${idx+1}Age`];
+              return (
+                <td key={r.year} style={{ ...cellStyle, color: a && a < 18 ? "#ec4899" : "#e2e8f0", background: bg(r.year, i) }}>
+                  {a || '-'}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+        <tr>
+          <td style={{ ...stickyTd, color: COLORS.sections.dependents }}>Dep Cost</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: COLORS.sections.dependents, background: bg(r.year, i) }}>
+              {fmt(r.depCost)}
+            </td>
+          ))}
+        </tr>
+      </AccordionSection>
     </>
   );
 };
