@@ -3,6 +3,21 @@ import { Cell, AccordionSection, RatioCell } from './components';
 import { fmt } from './utils';
 import { COLORS } from './constants';
 
+
+
+const fmtSigned = (v) => {
+  const n = Number(v || 0);
+  if (n > 0) return `+${fmt(n)}`;
+  if (n < 0) return fmt(n);
+  return fmt(0);
+};
+
+const cashNoteStyle = {
+  marginTop: "4px",
+  fontSize: "11px",
+  lineHeight: 1.15,
+  opacity: 0.85,
+};
 export const VariablesTablePart2Sections = ({ 
   enriched, 
   data, 
@@ -161,23 +176,81 @@ export const VariablesTablePart2Sections = ({
       <AccordionSection title="ASSETS" icon="🏦" color={COLORS.sections.assets} isOpen={sections.assets} onToggle={() => toggleSection('assets')}>
         <tr>
           <td style={stickyTd}>Cash</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              <Cell value={data[i].cashBalance} onChange={v => updateSingleYear(i, "cashBalance", v)} isYear0={i === 0} isIncome={true} />
-            </td>
-          ))}
+          {enriched.map((r, i) => {
+            if (i === 0) {
+              const heloc0 = Number(data[0].helocUsed || 0);
+              return (
+                <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                  <Cell
+                    value={data[i].cashBalance}
+                    onChange={v => updateSingleYear(i, "cashBalance", v)}
+                    isYear0={true}
+                    isIncome={true}
+                  />
+                  {heloc0 !== 0 && (
+                    <div style={cashNoteStyle}>
+                      HELOC: <span style={{ fontWeight: 600 }}>{fmtSigned(heloc0)}</span>
+                    </div>
+                  )}
+</td>
+              );
+            }
+
+            const helocDelta = Number((data[i].helocUsed || 0) - (data[i - 1].helocUsed || 0));
+
+            return (
+              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                <div style={{ fontWeight: 600 }}>{fmt(r.cashBal)}</div>
+                {helocDelta !== 0 && (
+                  <div style={cashNoteStyle}>
+                    HELOC: <span style={{ fontWeight: 600 }}>{fmtSigned(helocDelta)}</span>
+                  </div>
+                )}
+              </td>
+            );
+          })}
         </tr>
         <tr>
-          <td style={stickyTd}>Stocks/Bonds</td>
-          {enriched.map((r, i) => (
-            <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
-              {i === 0 ? (
-                <Cell value={data[i].stocksBonds} onChange={v => updateYear0("stocksBonds", v)} isYear0={true} isIncome={true} />
-              ) : (
-                <span style={{color:"#60a5fa"}}>{fmt(r.stocks)}</span>
-              )}
-            </td>
-          ))}
+<td style={stickyTd}>Stocks/Bonds</td>
+          {enriched.map((r, i) => {
+            if (i === 0) {
+              return (
+                <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                  <Cell
+                    value={data[i].stocksBonds}
+                    onChange={v => updateYear0("stocksBonds", v)}
+                    isYear0={true}
+                    isIncome={true}
+                  />
+                </td>
+              );
+            }
+
+            // Stocks/Bonds in year i are driven by:
+            // 1) prior-year portfolio growth
+            // 2) prior-year net cash flow invested (or withdrawn if negative)
+            // 3) prior-year purchases funded from the portfolio
+            const prevStocks = Number(enriched[i - 1]?.stocks || 0);
+            const growthRate = Number(data[0].stockGrowthRate || 0) / 100;
+            const growthAmt = prevStocks * growthRate;
+
+            const priorCF = Number(enriched[i - 1]?.cashFlow || 0);
+return (
+              <td key={r.year} style={{ ...cellStyle, background: bg(r.year, i) }}>
+                <div style={{ fontWeight: 600, color: "#60a5fa" }}>{fmt(r.stocks)}</div>
+                {priorCF !== 0 && (
+                  <div style={cashNoteStyle}>
+                    CF: <span style={{ fontWeight: 600 }}>{fmtSigned(priorCF)}</span>
+                  </div>
+                )}
+                {growthAmt !== 0 && (
+                  <div style={cashNoteStyle}>
+                    Market: <span style={{ fontWeight: 600 }}>{fmtSigned(growthAmt)}</span>
+                  </div>
+                )}
+              </td>
+            );
+          })}
         </tr>
         <tr>
           <td style={stickyTd}>↳ Growth %</td>

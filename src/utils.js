@@ -1,8 +1,13 @@
 export const fmt = v => {
-  if (!v && v !== 0) return "$0";
-  const a = Math.abs(v);
-  return (v < 0 ? "-$" : "$") + (a >= 1e6 ? (a / 1e6).toFixed(2) + "M" : a >= 1e3 ? (a / 1e3).toFixed(0) + "K" : v.toFixed(0));
+  const n = Number(v ?? 0);
+  const a = Math.abs(n);
+  return (n < 0 ? "-$" : "$") + (
+    a >= 1e6 ? (a / 1e6).toFixed(2) + "M" :
+    a >= 1e3 ? (a / 1e3).toFixed(0) + "K" :
+    a.toFixed(0)
+  );
 };
+
 
 export const calcMonthlyPayment = (principal, annualRate, years) => {
   if (principal <= 0 || years <= 0) return 0;
@@ -147,14 +152,14 @@ export const calcCumulative = (data, retireAge) => {
     
     let cashBal;
     if (i === 0) {
-      cashBal = r.cashBalance;
+      // Treat HELOC used as drawn cash sitting in the cash account (liquidity increases when used increases).
+      cashBal = r.cashBalance + (r.helocUsed || 0);
     } else {
-      // Cash balance grows/shrinks with prior year's cash flow
-      cashBal = Math.max(0, res[i-1].cashBal + res[i-1].cashFlow);
-      // HELOC changes affect cash: if helocUsed decreased from prior year, cash goes down (repayment)
-      // if helocUsed increased from prior year, cash goes up (draw)
-      const helocDelta = r.helocUsed - data[i-1].helocUsed;
-      cashBal = Math.max(0, cashBal + helocDelta);
+      // Cash balance is NOT driven by annual cash flow (that flows into Stocks/Bonds).
+      // Cash only changes when you draw/pay down HELOC.
+      cashBal = res[i-1].cashBal;
+      const helocDelta = (r.helocUsed || 0) - (data[i-1].helocUsed || 0);
+      cashBal = cashBal + helocDelta;
     }
 
     const assets = cashBal + stocks + ret401k + home + rental + car + mach;
@@ -166,7 +171,7 @@ export const calcCumulative = (data, retireAge) => {
       rentalMortgageBal, rentalInterest, rentalPrincipal, rentalMortgageBalEnd, effectiveRentalPayment,
       carLoanBalEnd, carLoanPaymentEffective, homeTaxes, rentalTaxes, helocInterest, housingCost, 
       baseExpenses, vacationBudget, carMaint, assets, debt, netWorth: assets - debt,
-      cashBal, cashRes: cashBal + (r.helocLimit - helocUsed), isRetired,
+      cashBal, cashRes: cashBal, isRetired,
       expenseToIncome: gross > 0 ? (exp/gross)*100 : 0,
       expenseToAfterTax: afterTax > 0 ? (exp/afterTax)*100 : 0,
       liabToAsset: assets > 0 ? (debt/assets)*100 : 0,
