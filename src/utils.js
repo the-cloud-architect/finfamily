@@ -76,6 +76,12 @@ export const calcCumulative = (data, retireAge) => {
   const baseMachDeprec = data[0].machineDepreciation;
   const baseCarMaintRate = data[0].carMaintenanceRate;
   const baseHelocRate = data[0].helocRate;
+  
+  // Use year 0 mortgage parameters for consistency
+  const baseMortgagePayment = data[0].mortgagePayment;
+  const baseMortgageRate = data[0].mortgageRate;
+  const baseRentalMortgagePayment = data[0].rentalMortgagePayment;
+  const baseRentalMortgageRate = data[0].rentalMortgageRate;
 
   for (let i = 0; i < data.length; i++) {
     const r = data[i];
@@ -98,13 +104,13 @@ export const calcCumulative = (data, retireAge) => {
     let rentalMortgageBal = i === 0 ? r.rentalMortgageBalance : res[i-1].rentalMortgageBalEnd;
     let carLoanBal = i === 0 ? r.carLoanBalance : res[i-1].carLoanBalEnd;
     
-    const mortgageInterest = mortgageBal > 0 ? mortgageBal * (r.mortgageRate / 100) : 0;
-    const effectiveMtgPayment = mortgageBal > 0 ? Math.min(r.mortgagePayment, mortgageBal + mortgageInterest) : 0;
+    const mortgageInterest = mortgageBal > 0 ? mortgageBal * (baseMortgageRate / 100) : 0;
+    const effectiveMtgPayment = mortgageBal > 0 ? Math.min(baseMortgagePayment, mortgageBal + mortgageInterest) : 0;
     const mortgagePrincipal = Math.max(0, effectiveMtgPayment - mortgageInterest);
     const mortgageBalEnd = Math.max(0, mortgageBal - mortgagePrincipal);
     
-    const rentalInterest = rentalMortgageBal > 0 ? rentalMortgageBal * (r.rentalMortgageRate / 100) : 0;
-    const effectiveRentalPayment = rentalMortgageBal > 0 ? Math.min(r.rentalMortgagePayment, rentalMortgageBal + rentalInterest) : 0;
+    const rentalInterest = rentalMortgageBal > 0 ? rentalMortgageBal * (baseRentalMortgageRate / 100) : 0;
+    const effectiveRentalPayment = rentalMortgageBal > 0 ? Math.min(baseRentalMortgagePayment, rentalMortgageBal + rentalInterest) : 0;
     const rentalPrincipal = Math.max(0, effectiveRentalPayment - rentalInterest);
     const rentalMortgageBalEnd = Math.max(0, rentalMortgageBal - rentalPrincipal);
     
