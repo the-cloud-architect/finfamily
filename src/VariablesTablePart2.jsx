@@ -3,7 +3,11 @@ import { Cell, AccordionSection, RatioCell } from './components';
 import { fmt } from './utils';
 import { COLORS } from './constants';
 
-
+// Format to exact dollar amount (no K/M rounding)
+const fmtDollar = (v) => {
+  const n = Number(v ?? 0);
+  return (n < 0 ? "-$" : "$") + Math.abs(Math.round(n)).toLocaleString();
+};
 
 const fmtSigned = (v) => {
   const n = Number(v || 0);
@@ -376,7 +380,7 @@ return (
           <td style={{ ...stickyTd, color: "#60a5fa" }}>Primary Mtg Pmt</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
-              {fmt(r.effectiveMtgPayment)}
+              {fmtDollar(r.effectiveMtgPayment)}
             </td>
           ))}
         </tr>
@@ -384,7 +388,7 @@ return (
           <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
-              {fmt(r.mortgageInterest)}
+              {fmtDollar(r.mortgageInterest)}
             </td>
           ))}
         </tr>
@@ -392,7 +396,7 @@ return (
           <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
-              {fmt(r.mortgagePrincipal)}
+              {fmtDollar(r.mortgagePrincipal)}
             </td>
           ))}
         </tr>
@@ -403,7 +407,7 @@ return (
               {i === 0 ? (
                 <Cell value={data[0].homeTaxes} onChange={v => updateYear0("homeTaxes", v)} isYear0={true} isExpense={true} />
               ) : (
-                <span style={{color:"#60a5fa"}}>{fmt(r.homeTaxes)}</span>
+                <span style={{color:"#60a5fa"}}>{fmtDollar(r.homeTaxes)}</span>
               )}
             </td>
           ))}
@@ -412,7 +416,7 @@ return (
           <td style={{ ...stickyTd, color: "#60a5fa" }}>Rental Mtg Pmt</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
-              {fmt(r.effectiveRentalPayment)}
+              {fmtDollar(r.effectiveRentalPayment)}
             </td>
           ))}
         </tr>
@@ -420,7 +424,7 @@ return (
           <td style={{ ...stickyTd, color: "#64748b" }}>↳ Interest</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#f87171", background: bg(r.year, i) }}>
-              {fmt(r.rentalInterest)}
+              {fmtDollar(r.rentalInterest)}
             </td>
           ))}
         </tr>
@@ -428,7 +432,7 @@ return (
           <td style={{ ...stickyTd, color: "#64748b" }}>↳ Principal</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#4ade80", background: bg(r.year, i) }}>
-              {fmt(r.rentalPrincipal)}
+              {fmtDollar(r.rentalPrincipal)}
             </td>
           ))}
         </tr>
@@ -439,7 +443,7 @@ return (
               {i === 0 ? (
                 <Cell value={data[0].rentalTaxes} onChange={v => updateYear0("rentalTaxes", v)} isYear0={true} isExpense={true} />
               ) : (
-                <span style={{color:"#60a5fa"}}>{fmt(r.rentalTaxes)}</span>
+                <span style={{color:"#60a5fa"}}>{fmtDollar(r.rentalTaxes)}</span>
               )}
             </td>
           ))}
@@ -451,7 +455,7 @@ return (
               {i === 0 ? (
                 <Cell value={data[0].hoaFees} onChange={v => updateYear0("hoaFees", v)} isYear0={true} isExpense={true} />
               ) : (
-                <span>{fmt(data[0].hoaFees)}</span>
+                <span>{fmtDollar(data[0].hoaFees)}</span>
               )}
             </td>
           ))}
@@ -460,7 +464,7 @@ return (
           <td style={{ ...stickyTd, color: "#f87171" }}>HELOC Interest</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: r.helocInterest > 0 ? "#f87171" : "#64748b", background: bg(r.year, i) }}>
-              {fmt(r.helocInterest)}
+              {fmtDollar(r.helocInterest)}
             </td>
           ))}
         </tr>
@@ -468,7 +472,7 @@ return (
           <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.housing }}>Total Housing</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.housing, background: bg(r.year, i) }}>
-              {fmt(r.housingCost)}
+              {fmtDollar(r.housingCost)}
             </td>
           ))}
         </tr>
@@ -597,8 +601,8 @@ return (
         </tr>
       </AccordionSection>
 
-      {/* 8. OTHER EXPENSES SECTION */}
-      <AccordionSection title={`OTHER EXPENSES (${data[0].expenseInflationRate}% inflation)`} icon="💸" color={COLORS.sections.expenses} isOpen={sections.expenses} onToggle={() => toggleSection('expenses')}>
+      {/* 8. EXPENSES SECTION */}
+      <AccordionSection title={`EXPENSES (${data[0].expenseInflationRate}% inflation)`} icon="💸" color={COLORS.sections.expenses} isOpen={sections.expenses} onToggle={() => toggleSection('expenses')}>
         <tr>
           <td style={stickyTd}>Inflation %</td>
           <td style={{ ...cellStyle, background: bg(enriched[0].year, 0) }}>
@@ -606,6 +610,31 @@ return (
           </td>
           {enriched.slice(1).map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, color: "#64748b", background: bg(r.year, i+1) }}></td>
+          ))}
+        </tr>
+        {/* Read-only Housing Costs */}
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa", fontStyle: "italic" }}>Primary Mtg Pmt</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
+              {fmtDollar(r.effectiveMtgPayment)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#60a5fa", fontStyle: "italic" }}>Rental Mtg Pmt</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: "#60a5fa", background: bg(r.year, i) }}>
+              {fmtDollar(r.effectiveRentalPayment)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, color: "#f87171", fontStyle: "italic" }}>HELOC Interest</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: r.helocInterest > 0 ? "#f87171" : "#64748b", background: bg(r.year, i) }}>
+              {fmtDollar(r.helocInterest)}
+            </td>
           ))}
         </tr>
         {[
@@ -663,11 +692,28 @@ return (
             </td>
           ))}
         </tr>
+        {/* Read-only Dependent Costs */}
+        <tr>
+          <td style={{ ...stickyTd, color: COLORS.sections.dependents, fontStyle: "italic" }}>Dependent Costs</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, color: COLORS.sections.dependents, background: bg(r.year, i) }}>
+              {fmtDollar(r.depCost)}
+            </td>
+          ))}
+        </tr>
         <tr>
           <td style={{ ...stickyTd, fontWeight: "bold", color: COLORS.sections.expenses }}>Total Expenses</td>
           {enriched.map((r, i) => (
             <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: COLORS.sections.expenses, background: bg(r.year, i) }}>
-              {fmt(r.exp)}
+              {fmtDollar(r.exp)}
+            </td>
+          ))}
+        </tr>
+        <tr>
+          <td style={{ ...stickyTd, fontWeight: "bold", color: "#94a3b8" }}>Monthly Expense</td>
+          {enriched.map((r, i) => (
+            <td key={r.year} style={{ ...cellStyle, fontWeight: "bold", color: "#94a3b8", background: bg(r.year, i) }}>
+              {fmtDollar(r.exp / 12)}
             </td>
           ))}
         </tr>
